@@ -1,6 +1,6 @@
 # Contributing to SEISMICA
 
-Thank you for your interest in contributing! This document outlines the process for contributing to SEISMICA — Autonomous Earthquake Routing & Drone Reconnaissance Platform.
+Thank you for your interest in contributing! This document outlines the process for contributing to SEISMICA.
 
 ## Table of Contents
 

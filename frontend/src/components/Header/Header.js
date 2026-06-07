@@ -128,7 +128,7 @@ export default function Header({ stats, statsLoading, timeframe }) {
             color:         'var(--text-muted)',
             marginTop:     4,
           }}>
-            AUTONOMOUS DRONE ROUTING SYSTEM · v3.0
+            COMMAND CENTER · v3.0
           </div>
         </div>
       </div>

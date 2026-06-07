@@ -1,4 +1,4 @@
-# SEISMICA — Autonomous Earthquake Routing & Drone Reconnaissance Platform
+# SEISMICA
 
 <div align="center">
 
