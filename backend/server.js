@@ -9,13 +9,22 @@ const PORT = 5000;
 
 // ─── USGS Feed URLs ───────────────────────────────────────────────────────────
 
-const USGS = {
-  ALL_DAY:  'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson',
-  ALL_WEEK: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson',
+const USGS_FEEDS = {
+  '24h': 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson',
+  '48h': 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson',
+  '7d':  'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson',
+  '30d': 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson',
+};
+
+const TIMEFRAME_MS = {
+  '24h': 24 * 60 * 60 * 1000,
+  '48h': 48 * 60 * 60 * 1000,
+  '7d':  7  * 24 * 60 * 60 * 1000,
+  '30d': 30 * 24 * 60 * 60 * 1000,
 };
 
 const MAX_ROUTE_POINTS = 40;
-const AXIOS_OPTS = { timeout: 12_000, headers: { Accept: 'application/json' } };
+const AXIOS_OPTS = { timeout: 15_000, headers: { Accept: 'application/json' } };
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 
@@ -26,10 +35,7 @@ app.use(express.json());
 //  TSP SERVICE
 // ═════════════════════════════════════════════════════════════════════════════
 
-/**
- * Great-circle distance between two lat/lon points (Haversine).
- * @returns {number} Distance in km
- */
+/** Great-circle distance (Haversine) — returns km */
 function haversine(lat1, lon1, lat2, lon2) {
   const R   = 6371;
   const rad = (d) => (d * Math.PI) / 180;
@@ -41,16 +47,16 @@ function haversine(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-/**
- * Build a symmetric N×N distance matrix from an array of {latitude, longitude}.
- */
+/** Build symmetric N×N distance matrix (Float64Array rows) */
 function buildMatrix(points) {
   const n = points.length;
   const m = Array.from({ length: n }, () => new Float64Array(n));
   for (let i = 0; i < n; i++) {
     for (let j = i + 1; j < n; j++) {
-      const d = haversine(points[i].latitude, points[i].longitude,
-                          points[j].latitude, points[j].longitude);
+      const d = haversine(
+        points[i].latitude, points[i].longitude,
+        points[j].latitude, points[j].longitude,
+      );
       m[i][j] = d;
       m[j][i] = d;
     }
@@ -58,25 +64,17 @@ function buildMatrix(points) {
   return m;
 }
 
-/**
- * Nearest-Neighbour heuristic — O(n²) greedy tour starting at index 0.
- * Returns a closed-loop index array (first === last).
- */
+/** Nearest-Neighbour greedy tour starting at index 0. Returns closed-loop. */
 function nearestNeighbour(matrix) {
   const n       = matrix.length;
   const visited = new Uint8Array(n);
   const tour    = [0];
   visited[0]    = 1;
-
   for (let step = 1; step < n; step++) {
     const cur = tour[tour.length - 1];
-    let best  = -1;
-    let bestD = Infinity;
+    let best = -1, bestD = Infinity;
     for (let j = 0; j < n; j++) {
-      if (!visited[j] && matrix[cur][j] < bestD) {
-        bestD = matrix[cur][j];
-        best  = j;
-      }
+      if (!visited[j] && matrix[cur][j] < bestD) { bestD = matrix[cur][j]; best = j; }
     }
     tour.push(best);
     visited[best] = 1;
@@ -85,22 +83,16 @@ function nearestNeighbour(matrix) {
   return tour;
 }
 
-/**
- * 2-Opt local search — iteratively reverses sub-segments until no improvement.
- * Mutates `tour` in-place and returns it.
- */
+/** 2-Opt local search — mutates tour in-place, returns it. */
 function twoOpt(tour, matrix) {
-  const n = tour.length - 1; // city count (tour[0] === tour[n])
+  const n = tour.length - 1;
   let improved = true;
-
   while (improved) {
     improved = false;
     for (let i = 1; i < n - 1; i++) {
       for (let j = i + 1; j < n; j++) {
-        const a = tour[i - 1], b = tour[i];
-        const c = tour[j],     d = tour[j + 1];
+        const a = tour[i - 1], b = tour[i], c = tour[j], d = tour[j + 1];
         if (matrix[a][c] + matrix[b][d] < matrix[a][b] + matrix[c][d] - 1e-10) {
-          // Reverse segment [i … j]
           let lo = i, hi = j;
           while (lo < hi) { [tour[lo], tour[hi]] = [tour[hi], tour[lo]]; lo++; hi--; }
           improved = true;
@@ -111,46 +103,54 @@ function twoOpt(tour, matrix) {
   return tour;
 }
 
-/** Sum of all edges in a closed-loop tour. */
+/** Sum of all edges in a closed-loop tour */
 function tourLength(tour, matrix) {
-  let total = 0;
-  for (let i = 0; i < tour.length - 1; i++) total += matrix[tour[i]][tour[i + 1]];
-  return total;
+  let t = 0;
+  for (let i = 0; i < tour.length - 1; i++) t += matrix[tour[i]][tour[i + 1]];
+  return t;
 }
 
 /**
  * Full TSP pipeline.
- * @param {Array} points  - Array of {latitude, longitude, …}
- * @returns {{ nnTour, nnDistance, optimisedTour, optimisedDistance, efficiency }}
+ * Returns NN tour + timed 2-Opt tour with all metrics.
  */
 function solveTSP(points) {
   const matrix = buildMatrix(points);
 
-  // Nearest-Neighbour baseline
-  const nnTour   = nearestNeighbour(matrix);
-  const nnDist   = parseFloat(tourLength(nnTour, matrix).toFixed(2));
+  // ── Nearest Neighbour ──────────────────────────────────────────────────────
+  const t0NN  = process.hrtime.bigint();
+  const nnTour = nearestNeighbour(matrix);
+  const nnMs   = Number(process.hrtime.bigint() - t0NN) / 1e6;
+  const nnDist = tourLength(nnTour, matrix);
 
-  // 2-Opt on a copy
-  const optTour  = twoOpt([...nnTour], matrix);
-  const optDist  = parseFloat(tourLength(optTour, matrix).toFixed(2));
+  // ── 2-Opt ──────────────────────────────────────────────────────────────────
+  const t0Opt  = process.hrtime.bigint();
+  const optTour = twoOpt([...nnTour], matrix);
+  const optMs   = Number(process.hrtime.bigint() - t0Opt) / 1e6;
+  const optDist = tourLength(optTour, matrix);
 
-  // Efficiency: percentage distance saved vs NN-only
   const efficiency = nnDist > 0
     ? parseFloat((((nnDist - optDist) / nnDist) * 100).toFixed(2))
     : 0;
 
-  return { nnTour, nnDistance: nnDist, optimisedTour: optTour, optimisedDistance: optDist, efficiency, matrix };
+  return {
+    nnTour,
+    nnDistance:         parseFloat(nnDist.toFixed(2)),
+    nnExecutionMs:      parseFloat(nnMs.toFixed(3)),
+    optimisedTour:      optTour,
+    optimisedDistance:  parseFloat(optDist.toFixed(2)),
+    twoOptExecutionMs:  parseFloat(optMs.toFixed(3)),
+    efficiency,
+  };
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-//  DATA PARSER
+//  HELPERS
 // ═════════════════════════════════════════════════════════════════════════════
 
-/**
- * Parse raw USGS GeoJSON features into clean earthquake objects.
- * Filters out entries with null / NaN coordinates or magnitudes.
- */
-function parseFeatures(features) {
+/** Parse raw USGS GeoJSON features into clean earthquake objects */
+function parseFeatures(features, sinceMs = null) {
+  const cutoff = sinceMs ? Date.now() - sinceMs : null;
   return features
     .map(({ id, properties: p, geometry: g }) => ({
       id,
@@ -164,32 +164,40 @@ function parseFeatures(features) {
     .filter(
       (q) =>
         q.magnitude != null && !isNaN(q.magnitude) &&
-        typeof q.longitude === 'number' && typeof q.latitude === 'number'
+        typeof q.longitude === 'number' && typeof q.latitude === 'number' &&
+        (cutoff === null || q.time >= cutoff),
     );
+}
+
+/** Resolve timeframe string to { url, sinceMs } */
+function resolveTimeframe(tf = '24h') {
+  const key = USGS_FEEDS[tf] ? tf : '24h';
+  return {
+    url:     USGS_FEEDS[key],
+    sinceMs: TIMEFRAME_MS[key],
+  };
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
 //  ENDPOINTS
 // ═════════════════════════════════════════════════════════════════════════════
 
-// ── /api/stats ────────────────────────────────────────────────────────────────
-app.get('/api/stats', async (_req, res) => {
+// ── GET /api/stats ────────────────────────────────────────────────────────────
+app.get('/api/stats', async (req, res) => {
+  const { url, sinceMs } = resolveTimeframe(req.query.timeframe);
   try {
-    const { data } = await axios.get(USGS.ALL_DAY, AXIOS_OPTS);
-    const quakes   = parseFeatures(data.features);
-
-    const mags        = quakes.map((q) => q.magnitude);
-    const totalQuakes = quakes.length;
-    const avgMag      = totalQuakes ? parseFloat((mags.reduce((a, b) => a + b, 0) / totalQuakes).toFixed(2)) : 0;
-    const maxMag      = totalQuakes ? parseFloat(Math.max(...mags).toFixed(2)) : 0;
-    const minMag      = totalQuakes ? parseFloat(Math.min(...mags).toFixed(2)) : 0;
+    const { data } = await axios.get(url, AXIOS_OPTS);
+    const quakes   = parseFeatures(data.features, sinceMs);
+    const mags     = quakes.map((q) => q.magnitude);
+    const total    = quakes.length;
 
     return res.json({
-      totalQuakes,
-      avgMagnitude: avgMag,
-      maxMagnitude: maxMag,
-      minMagnitude: minMag,
+      totalQuakes:  total,
+      avgMagnitude: total ? parseFloat((mags.reduce((a, b) => a + b, 0) / total).toFixed(2)) : 0,
+      maxMagnitude: total ? parseFloat(Math.max(...mags).toFixed(2)) : 0,
+      minMagnitude: total ? parseFloat(Math.min(...mags).toFixed(2)) : 0,
       timestamp:    new Date().toISOString(),
+      timeframe:    req.query.timeframe || '24h',
     });
   } catch (err) {
     console.error('[/api/stats]', err.message);
@@ -197,37 +205,38 @@ app.get('/api/stats', async (_req, res) => {
   }
 });
 
-// ── /api/history ─────────────────────────────────────────────────────────────
-app.get('/api/history', async (_req, res) => {
+// ── GET /api/history ─────────────────────────────────────────────────────────
+app.get('/api/history', async (req, res) => {
+  const { url, sinceMs } = resolveTimeframe(req.query.timeframe || '7d');
   try {
-    const { data } = await axios.get(USGS.ALL_WEEK, AXIOS_OPTS);
-    const quakes   = parseFeatures(data.features);
+    const { data } = await axios.get(url, AXIOS_OPTS);
+    const quakes   = parseFeatures(data.features, sinceMs);
 
-    // Bin by integer magnitude floor (0-1, 1-2, … 7+)
     const buckets = {};
     for (let i = 0; i <= 7; i++) buckets[`${i}-${i + 1}`] = 0;
-
     quakes.forEach(({ magnitude }) => {
       const floor = Math.min(Math.floor(magnitude), 7);
-      const key   = `${floor}-${floor + 1}`;
-      buckets[key] = (buckets[key] || 0) + 1;
+      buckets[`${floor}-${floor + 1}`] = (buckets[`${floor}-${floor + 1}`] || 0) + 1;
     });
 
-    const bins = Object.entries(buckets).map(([range, count]) => ({ range, count }));
+    const bins  = Object.entries(buckets).map(([range, count]) => ({ range, count }));
+    const times = quakes.map((q) => q.time).filter(Boolean);
 
-    const times    = quakes.map((q) => q.time).filter(Boolean);
-    const dateRange = times.length
-      ? { from: new Date(Math.min(...times)).toISOString(), to: new Date(Math.max(...times)).toISOString() }
-      : null;
-
-    return res.json({ bins, totalEvents: quakes.length, dateRange });
+    return res.json({
+      bins,
+      totalEvents: quakes.length,
+      timeframe:   req.query.timeframe || '7d',
+      dateRange: times.length
+        ? { from: new Date(Math.min(...times)).toISOString(), to: new Date(Math.max(...times)).toISOString() }
+        : null,
+    });
   } catch (err) {
     console.error('[/api/history]', err.message);
     return res.status(502).json({ error: 'Failed to fetch USGS history.' });
   }
 });
 
-// ── /api/route ────────────────────────────────────────────────────────────────
+// ── GET /api/route ────────────────────────────────────────────────────────────
 app.get('/api/route', async (req, res) => {
   const t0     = process.hrtime.bigint();
   const rawMag = req.query.minMag;
@@ -237,34 +246,48 @@ app.get('/api/route', async (req, res) => {
     return res.status(400).json({ error: 'minMag must be a valid number.' });
   }
 
+  const { url, sinceMs } = resolveTimeframe(req.query.timeframe);
+  const execMs = () => parseFloat((Number(process.hrtime.bigint() - t0) / 1e6).toFixed(3));
+
   try {
-    const { data } = await axios.get(USGS.ALL_DAY, AXIOS_OPTS);
-    const allQuakes = parseFeatures(data.features);
+    const { data }  = await axios.get(url, AXIOS_OPTS);
+    const allQuakes = parseFeatures(data.features, sinceMs);
 
     const filtered = allQuakes
       .filter((q) => q.magnitude >= minMag)
       .sort((a, b) => b.magnitude - a.magnitude)
       .slice(0, MAX_ROUTE_POINTS);
 
-    const execMs = () => parseFloat((Number(process.hrtime.bigint() - t0) / 1e6).toFixed(3));
-
     if (filtered.length === 0) {
-      return res.json({ route: [], totalDistanceKm: 0, nnDistanceKm: 0, optimisationEfficiency: 0, executionTimeMs: execMs() });
+      return res.json({
+        route: [], totalDistanceKm: 0, nnDistanceKm: 0,
+        optimisationEfficiency: 0, nnExecutionMs: 0, twoOptExecutionMs: 0,
+        executionTimeMs: execMs(), timeframe: req.query.timeframe || '24h',
+      });
     }
+
     if (filtered.length === 1) {
-      return res.json({ route: filtered, totalDistanceKm: 0, nnDistanceKm: 0, optimisationEfficiency: 0, executionTimeMs: execMs() });
+      return res.json({
+        route: filtered, totalDistanceKm: 0, nnDistanceKm: 0,
+        optimisationEfficiency: 0, nnExecutionMs: 0, twoOptExecutionMs: 0,
+        executionTimeMs: execMs(), timeframe: req.query.timeframe || '24h',
+      });
     }
 
-    const { optimisedTour, optimisedDistance, nnDistance, efficiency } = solveTSP(filtered);
-
-    const route = optimisedTour.slice(0, -1).map((idx) => filtered[idx]);
+    const {
+      optimisedTour, optimisedDistance, nnDistance,
+      efficiency, nnExecutionMs, twoOptExecutionMs,
+    } = solveTSP(filtered);
 
     return res.json({
-      route,
+      route:                  optimisedTour.slice(0, -1).map((idx) => filtered[idx]),
       totalDistanceKm:        optimisedDistance,
       nnDistanceKm:           nnDistance,
       optimisationEfficiency: efficiency,
+      nnExecutionMs,
+      twoOptExecutionMs,
       executionTimeMs:        execMs(),
+      timeframe:              req.query.timeframe || '24h',
     });
   } catch (err) {
     console.error('[/api/route]', err.message);
@@ -274,9 +297,9 @@ app.get('/api/route', async (req, res) => {
   }
 });
 
-// ── Health ────────────────────────────────────────────────────────────────────
+// ── GET /health ───────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) =>
-  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+  res.json({ status: 'ok', version: '3.0.0', timestamp: new Date().toISOString() }),
 );
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
@@ -284,10 +307,10 @@ app.use((_req, res) => res.status(404).json({ error: 'Not found.' }));
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`\n[Seismica] ▸ http://localhost:${PORT}`);
-  console.log('[Seismica] Endpoints:');
-  console.log('  GET /api/route?minMag=<n>  — TSP-optimised flight path');
-  console.log('  GET /api/stats             — Real-time global stats');
-  console.log('  GET /api/history           — 7-day magnitude histogram');
+  console.log(`\n[SEISMICA v3.0] ▸ http://localhost:${PORT}`);
+  console.log('[Endpoints]');
+  console.log('  GET /api/route?minMag=<n>&timeframe=<24h|48h|7d|30d>');
+  console.log('  GET /api/stats?timeframe=<24h|48h|7d|30d>');
+  console.log('  GET /api/history?timeframe=<7d|30d>');
   console.log('  GET /health\n');
 });

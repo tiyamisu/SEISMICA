@@ -1,3 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESET & ROOT
+═══════════════════════════════════════════════════════════════════════════ */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -8,64 +13,414 @@ html, body, #root {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #050a10;
+  background: #0a0e17;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Leaflet popup overrides */
+/* ═══════════════════════════════════════════════════════════════════════════
+   CSS CUSTOM PROPERTIES — Design Tokens
+═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --bg:            #0a0e17;
+  --bg-panel:      rgba(8, 14, 26, 0.92);
+  --bg-card:       rgba(0, 242, 254, 0.04);
+  --border:        rgba(0, 242, 254, 0.16);
+  --border-hover:  rgba(0, 242, 254, 0.36);
+  --accent:        #00f2fe;
+  --accent-dim:    rgba(0, 242, 254, 0.10);
+  --accent-glow:   rgba(0, 242, 254, 0.25);
+  --success:       #00ff88;
+  --success-dim:   rgba(0, 255, 136, 0.12);
+  --warning:       #ffae00;
+  --warning-dim:   rgba(255, 174, 0, 0.12);
+  --critical:      #ff3b3b;
+  --critical-dim:  rgba(255, 59, 59, 0.12);
+  --text:          #c8d6e5;
+  --text-muted:    #3a5a70;
+  --text-dim:      #1e3a50;
+  --font-display:  'Orbitron', monospace;
+  --font-mono:     'JetBrains Mono', monospace;
+  --radius:        8px;
+  --radius-sm:     4px;
+  --transition:    0.22s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   KEYFRAME ANIMATIONS
+═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes pulse-ring {
+  0%   { transform: scale(0.8); opacity: 0.8; }
+  70%  { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.25; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px var(--accent-glow); }
+  50%       { box-shadow: 0 0 22px var(--accent-glow), 0 0 40px var(--accent-dim); }
+}
+
+@keyframes slide-in-left {
+  from { transform: translateX(-16px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(16px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+@keyframes slide-in-up {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes progress-fill {
+  from { width: 0%; }
+  to   { width: var(--target-width, 100%); }
+}
+
+@keyframes scanline {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(200%); }
+}
+
+@keyframes radar-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes alert-in {
+  from { transform: translateX(-8px); opacity: 0; border-left-color: transparent; }
+  to   { transform: translateX(0);    opacity: 1; border-left-color: var(--critical); }
+}
+
+@keyframes critical-flash {
+  0%, 100% { border-color: var(--critical); box-shadow: 0 0 12px rgba(255,59,59,0.3); }
+  50%       { border-color: rgba(255,59,59,0.3); box-shadow: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILITY CLASSES
+═══════════════════════════════════════════════════════════════════════════ */
+
+.glass-panel {
+  background:          var(--bg-panel);
+  border:              1px solid var(--border);
+  border-radius:       var(--radius);
+  backdrop-filter:     blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:          0 0 32px rgba(0,242,254,0.04), inset 0 1px 0 rgba(0,242,254,0.06);
+}
+
+.section-title {
+  font-family:   var(--font-display);
+  font-size:     8px;
+  font-weight:   600;
+  letter-spacing: 0.25em;
+  color:         var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.metric-card {
+  display:        flex;
+  flex-direction: column;
+  gap:            6px;
+  padding:        10px 12px;
+  background:     var(--bg-card);
+  border:         1px solid var(--border);
+  border-radius:  var(--radius-sm);
+  transition:     border-color var(--transition), box-shadow var(--transition);
+  cursor:         default;
+}
+
+.metric-card:hover {
+  border-color: var(--border-hover);
+  box-shadow:   0 0 12px var(--accent-dim);
+}
+
+.metric-label {
+  font-family:    var(--font-display);
+  font-size:      7px;
+  letter-spacing: 0.18em;
+  color:          var(--text-muted);
+  text-transform: uppercase;
+}
+
+.metric-value {
+  font-family:    var(--font-display);
+  font-size:      16px;
+  font-weight:    700;
+  letter-spacing: 0.04em;
+  color:          var(--accent);
+  animation:      count-up 0.4s ease;
+}
+
+.metric-unit {
+  font-size:      9px;
+  font-weight:    400;
+  color:          var(--text-muted);
+  margin-left:    2px;
+}
+
+.btn-tactical {
+  font-family:    var(--font-display);
+  font-size:      10px;
+  font-weight:    700;
+  letter-spacing: 0.25em;
+  color:          var(--accent);
+  background:     linear-gradient(135deg, rgba(0,80,100,0.5), rgba(0,30,50,0.8));
+  border:         1px solid rgba(0,242,254,0.35);
+  border-radius:  var(--radius-sm);
+  cursor:         pointer;
+  padding:        10px 18px;
+  transition:     all var(--transition);
+  text-transform: uppercase;
+  white-space:    nowrap;
+}
+
+.btn-tactical:hover:not(:disabled) {
+  background:  linear-gradient(135deg, rgba(0,120,150,0.6), rgba(0,60,80,0.9));
+  border-color: var(--accent);
+  box-shadow:   0 0 18px var(--accent-glow);
+}
+
+.btn-tactical:disabled {
+  opacity:        0.45;
+  cursor:         not-allowed;
+}
+
+.btn-tactical.active {
+  background:   var(--accent-dim);
+  border-color: var(--accent);
+  color:        var(--accent);
+  box-shadow:   0 0 12px var(--accent-glow), inset 0 0 8px var(--accent-dim);
+}
+
+.tag-alert {
+  font-family:    var(--font-mono);
+  font-size:      9px;
+  font-weight:    700;
+  letter-spacing: 0.12em;
+  padding:        2px 6px;
+  border-radius:  2px;
+  text-transform: uppercase;
+}
+
+.tag-critical {
+  color:      var(--critical);
+  background: var(--critical-dim);
+}
+
+.tag-warning {
+  color:      var(--warning);
+  background: var(--warning-dim);
+}
+
+.tag-success {
+  color:      var(--success);
+  background: var(--success-dim);
+}
+
+.divider {
+  height:     1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin:     6px 0;
+}
+
+.alert-critical-card {
+  border:       1px solid var(--critical);
+  border-radius: var(--radius-sm);
+  background:   var(--critical-dim);
+  padding:      10px 14px;
+  animation:    critical-flash 1.5s ease infinite;
+}
+
+.status-dot {
+  width:         8px;
+  height:        8px;
+  border-radius: 50%;
+  display:       inline-block;
+  flex-shrink:   0;
+}
+
+.status-dot.active  { background: var(--success); box-shadow: 0 0 8px var(--success); animation: glow-pulse 2s ease infinite; }
+.status-dot.idle    { background: var(--text-muted); }
+.status-dot.loading { background: var(--warning); box-shadow: 0 0 8px var(--warning); animation: blink 0.8s ease infinite; }
+.status-dot.error   { background: var(--critical); box-shadow: 0 0 8px var(--critical); animation: blink 0.6s ease infinite; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LEAFLET OVERRIDES
+═══════════════════════════════════════════════════════════════════════════ */
+
+.leaflet-container { background: var(--bg) !important; }
+
 .leaflet-popup-content-wrapper {
-  background: #080e18 !important;
-  border: 1px solid #0d2a40 !important;
-  border-radius: 6px !important;
-  color: #c8d6e5 !important;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.6) !important;
-  padding: 0 !important;
+  background:   rgba(6, 12, 22, 0.97) !important;
+  border:       1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  color:        var(--text) !important;
+  box-shadow:   0 0 28px rgba(0,242,254,0.15) !important;
+  padding:      0 !important;
+  font-family:  var(--font-mono) !important;
 }
 
-.leaflet-popup-content {
-  margin: 14px 16px !important;
+.leaflet-popup-content { margin: 14px 16px !important; }
+.leaflet-popup-tip     { background: rgba(0,242,254,0.18) !important; }
+.leaflet-popup-close-button { color: var(--text-muted) !important; top: 6px !important; right: 8px !important; font-size: 15px !important; }
+.leaflet-popup-close-button:hover { color: var(--accent) !important; }
+
+/* ── Zoom control — bottom-left, tactical styling ─────────────────────────── */
+.leaflet-control-zoom {
+  border:        1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  overflow:      hidden !important;
+  box-shadow:    0 0 14px rgba(0,242,254,0.08) !important;
+  margin-bottom: 12px !important;
+  margin-left:   12px !important;
 }
 
-.leaflet-popup-tip {
-  background: #0d2a40 !important;
+.leaflet-control-zoom a {
+  background:      rgba(8,14,26,0.95) !important;
+  color:           var(--accent) !important;
+  border:          none !important;
+  border-bottom:   1px solid var(--border) !important;
+  font-size:       15px !important;
+  font-family:     var(--font-display) !important;
+  font-weight:     700 !important;
+  line-height:     30px !important;
+  width:           30px !important;
+  height:          30px !important;
+  transition:      background var(--transition), box-shadow var(--transition) !important;
+  display:         flex !important;
+  align-items:     center !important;
+  justify-content: center !important;
 }
 
-.leaflet-popup-close-button {
-  color: #3a6080 !important;
-  font-size: 16px !important;
-  top: 6px !important;
-  right: 8px !important;
+.leaflet-control-zoom a:hover {
+  background: rgba(0,242,254,0.12) !important;
+  box-shadow: inset 0 0 8px rgba(0,242,254,0.15) !important;
+  color:      #fff !important;
 }
 
-.leaflet-popup-close-button:hover {
-  color: #00e5ff !important;
+/* Bottom button — no double border at the bottom of the control */
+.leaflet-control-zoom-out {
+  border-bottom: none !important;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: #050a10; }
-::-webkit-scrollbar-thumb { background: #0d2a40; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #00e5ff44; }
+/* Remove Leaflet's default margin so our explicit values apply cleanly */
+.leaflet-bottom.leaflet-left .leaflet-control-zoom {
+  margin-bottom: 12px !important;
+  margin-left:   12px !important;
+}
 
-/* Range input thumb styling */
+/* Tooltip override */
+.leaflet-tooltip {
+  background:   rgba(6, 12, 22, 0.97) !important;
+  border:       1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  color:        var(--text) !important;
+  font-family:  var(--font-mono) !important;
+  font-size:    11px !important;
+  box-shadow:   0 0 18px rgba(0,242,254,0.12) !important;
+  padding:      8px 12px !important;
+  white-space:  nowrap !important;
+}
+
+.leaflet-tooltip-top::before  { border-top-color:    var(--border) !important; }
+.leaflet-tooltip-bottom::before { border-bottom-color: var(--border) !important; }
+.leaflet-tooltip-left::before { border-left-color:   var(--border) !important; }
+.leaflet-tooltip-right::before { border-right-color:  var(--border) !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FORM ELEMENTS
+═══════════════════════════════════════════════════════════════════════════ */
+
+input[type='range'] {
+  -webkit-appearance: none;
+  width:        100%;
+  height:       3px;
+  border-radius: 2px;
+  background:   linear-gradient(90deg, var(--accent), #004060);
+  outline:      none;
+  cursor:       pointer;
+}
+
 input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
+  width:         14px;
+  height:        14px;
   border-radius: 50%;
-  background: #00e5ff;
-  box-shadow: 0 0 8px #00e5ff;
-  cursor: pointer;
-  border: none;
+  background:    var(--accent);
+  box-shadow:    0 0 8px var(--accent);
+  cursor:        pointer;
 }
 
 input[type='range']::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
+  width:         14px;
+  height:        14px;
   border-radius: 50%;
-  background: #00e5ff;
-  box-shadow: 0 0 8px #00e5ff;
-  cursor: pointer;
-  border: none;
+  background:    var(--accent);
+  box-shadow:    0 0 8px var(--accent);
+  cursor:        pointer;
+  border:        none;
+}
+
+input[type='number'] {
+  background:    rgba(0,242,254,0.04);
+  border:        1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color:         var(--accent);
+  font-family:   var(--font-mono);
+  font-size:     12px;
+  padding:       6px 10px;
+  outline:       none;
+  width:         100%;
+  transition:    border-color var(--transition);
+}
+
+input[type='number']:focus {
+  border-color: var(--accent);
+  box-shadow:   0 0 8px var(--accent-dim);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PULSE RING (for map markers — applied via Leaflet className)
+═══════════════════════════════════════════════════════════════════════════ */
+
+.pulse-marker::after {
+  content:       '';
+  position:      absolute;
+  top:           50%;
+  left:          50%;
+  transform:     translate(-50%, -50%);
+  width:         100%;
+  height:        100%;
+  border-radius: 50%;
+  animation:     pulse-ring 2s ease-out infinite;
 }
