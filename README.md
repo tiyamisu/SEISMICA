@@ -211,17 +211,6 @@ Open **http://localhost:3000** in your browser.
 
 ---
 
-## 📸 Screenshots
-
-> _Screenshots can be added here after deployment._
-
-| View | Description |
-|---|---|
-| Command Center | Full dashboard on launch with live stats |
-| Route Dispatched | Map with markers, polyline, and drone animation |
-| Telemetry Panel | Recharts histogram + metric grid |
-
----
 
 ## 🤝 Contributing
 
