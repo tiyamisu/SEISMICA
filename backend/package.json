@@ -1,0 +1,29 @@
+{
+  "name": "seismica-backend",
+  "version": "2.0.0",
+  "description": "Express API server for SEISMICA — real-time USGS earthquake data, TSP route optimisation (Nearest-Neighbour + 2-Opt), global stats, and 7-day historical histogram.",
+  "main": "server.js",
+  "author": "Tiyasha Sarkar",
+  "license": "MIT",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "earthquake",
+    "usgs",
+    "tsp",
+    "drone-routing",
+    "express",
+    "geojson"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.17.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
+}
