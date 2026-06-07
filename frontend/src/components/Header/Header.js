@@ -3,24 +3,25 @@ import { fmtUtcClock, fmtUtcDate, fmt } from '../../utils/formatters';
 
 // ── Seismic waveform SVG logo (replicates uploaded inspiration) ───────────────
 function SeismicLogo() {
+  const rings = [1.4, 1.85, 2.3];
   return (
     <div style={{
       position:     'relative',
-      width:        48,
-      height:       48,
+      width:        32,
+      height:       32,
       flexShrink:   0,
     }}>
-      {/* Pulsing rings */}
-      {[1, 0.65, 0.38].map((scale, i) => (
+      {/* Concentric pulse rings */}
+      {rings.map((scale, i) => (
         <div key={i} style={{
           position:      'absolute',
           inset:         0,
           borderRadius:  '50%',
-          background:    `rgba(255, 90, 90, ${0.12 - i * 0.03})`,
+          background:    `rgba(149, 224, 222, ${0.18 - i * 0.05})`,
           transform:     `scale(${scale})`,
           transformOrigin: 'center',
           animation:     `pulse-ring ${2 + i * 0.5}s ease-out infinite`,
-          animationDelay: `${i * 0.3}s`,
+          pointerEvents: 'none',
         }} />
       ))}
       {/* Core circle */}
@@ -28,8 +29,8 @@ function SeismicLogo() {
         position:     'absolute',
         inset:        '25%',
         borderRadius: '50%',
-        background:   'linear-gradient(135deg, #ff6b6b, #ff3b3b)',
-        boxShadow:    '0 0 16px rgba(255,59,59,0.5)',
+        background:   'linear-gradient(135deg, #4100F5, #95E0DE)',
+        boxShadow:    '0 0 16px rgba(65, 0, 245, 0.7)',
         display:      'flex',
         alignItems:   'center',
         justifyContent: 'center',
@@ -39,7 +40,7 @@ function SeismicLogo() {
           <polyline
             points="0,10 6,10 9,2 12,18 15,10 21,10 24,5 27,15 30,10 36,10"
             fill="none"
-            stroke="white"
+            stroke="#CDF354"
             strokeWidth="2.2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -66,7 +67,7 @@ function StatCell({ label, value, color = 'var(--accent)' }) {
         fontSize:      '15px',
         fontWeight:    700,
         color,
-        textShadow:    color !== 'var(--accent)' ? `0 0 10px ${color}` : '0 0 10px var(--accent-glow)',
+        textShadow:    `0 0 10px ${color}50`,
         animation:     'count-up 0.4s ease',
       }}>{value}</div>
     </div>
@@ -89,7 +90,7 @@ export default function Header({ stats, statsLoading, timeframe }) {
       alignItems:     'center',
       justifyContent: 'space-between',
       padding:        '0 20px',
-      background:     'rgba(6,10,20,0.97)',
+      background:     '#191414',
       borderBottom:   '1px solid var(--border)',
       position:       'relative',
       overflow:       'hidden',
@@ -100,7 +101,7 @@ export default function Header({ stats, statsLoading, timeframe }) {
       <div style={{
         position:       'absolute',
         inset:          0,
-        background:     'linear-gradient(transparent 50%, rgba(0,242,254,0.012) 50%)',
+        background:     'linear-gradient(transparent 50%, rgba(149, 224, 222, 0.015) 50%)',
         backgroundSize: '100% 4px',
         pointerEvents:  'none',
         zIndex:         0,
@@ -115,8 +116,8 @@ export default function Header({ stats, statsLoading, timeframe }) {
             fontSize:      '22px',
             fontWeight:    900,
             letterSpacing: '0.45em',
-            color:         '#e8f4fd',
-            textShadow:    '0 0 24px rgba(0,242,254,0.5), 0 0 48px rgba(0,242,254,0.15)',
+            color:         'var(--accent)',
+            textShadow:    '0 0 24px rgba(205, 243, 84, 0.35), 0 0 48px rgba(65, 0, 245, 0.2)',
             lineHeight:    1,
           }}>
             SEISMICA
@@ -145,12 +146,12 @@ export default function Header({ stats, statsLoading, timeframe }) {
         <StatCell
           label="ACTIVE QUAKES"
           value={statsLoading ? '…' : fmt(stats?.totalQuakes, 0) || '—'}
-          color="var(--accent)"
+          color="var(--text)"
         />
         <StatCell
           label="AVG MAGNITUDE"
           value={statsLoading ? '…' : fmt(stats?.avgMagnitude) || '—'}
-          color="var(--warning)"
+          color="var(--text)"
         />
         <StatCell
           label="MAX MAGNITUDE"
@@ -160,7 +161,7 @@ export default function Header({ stats, statsLoading, timeframe }) {
         <StatCell
           label="TIMEFRAME"
           value={timeframe.toUpperCase()}
-          color="var(--success)"
+          color="var(--warning)"
         />
       </div>
 

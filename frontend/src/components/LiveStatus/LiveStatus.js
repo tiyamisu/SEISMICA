@@ -3,7 +3,7 @@ import { SYNC_STATUS, fmtCountdown, fmtTime } from '../../hooks/useAutoRefresh';
 
 const STATUS_CONFIG = {
   [SYNC_STATUS.IDLE]:       { color: 'var(--success)',  pulse: true,  label: 'LIVE'                   },
-  [SYNC_STATUS.SYNCING]:    { color: '#ffae00',          pulse: true,  label: 'SYNCING USGS DATA…'     },
+  [SYNC_STATUS.SYNCING]:    { color: 'var(--warning)',  pulse: true,  label: 'SYNCING USGS DATA…'     },
   [SYNC_STATUS.RECOMPUTED]: { color: 'var(--accent)',   pulse: true,  label: 'ROUTE RECOMPUTED'        },
   [SYNC_STATUS.UPDATED]:    { color: 'var(--success)',  pulse: true,  label: 'LIVE FEED UPDATED ✓'     },
   [SYNC_STATUS.ERROR]:      { color: 'var(--critical)', pulse: false, label: 'DATA FEED WARNING'       },
@@ -95,7 +95,7 @@ export default memo(function LiveStatus({
         {/* Countdown */}
         <div style={{
           background:   'var(--bg-card)',
-          border:       `1px solid ${hasDispatched ? 'var(--border)' : 'rgba(0,242,254,0.06)'}`,
+          border:       `1px solid ${hasDispatched ? 'var(--border)' : 'rgba(58, 116, 87, 0.08)'}`,
           borderRadius: 4,
           padding:      '5px 8px',
         }}>
@@ -122,7 +122,7 @@ export default memo(function LiveStatus({
           width:         '100%',
           padding:       '6px 0',
           background:    'transparent',
-          border:        `1px solid ${hasDispatched ? 'var(--border)' : 'rgba(0,242,254,0.08)'}`,
+          border:        `1px solid ${hasDispatched ? 'var(--border)' : 'rgba(58, 116, 87, 0.1)'}`,
           borderRadius:  4,
           color:         hasDispatched ? 'var(--accent)' : 'var(--text-dim)',
           fontFamily:    'var(--font-display)',

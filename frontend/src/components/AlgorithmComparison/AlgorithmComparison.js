@@ -41,11 +41,11 @@ export default memo(function AlgorithmComparison({ result }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
 
         {/* NN column */}
-        <div style={{ padding: '10px', background: 'rgba(255,174,0,0.05)', borderRadius: 6, border: '1px solid rgba(255,174,0,0.2)' }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 7, color: 'var(--warning)', letterSpacing: '0.18em', marginBottom: 8 }}>
+        <div style={{ padding: '10px', background: 'rgba(149, 224, 222, 0.08)', borderRadius: 6, border: '1px solid rgba(149, 224, 222, 0.35)' }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 7, color: 'var(--success)', letterSpacing: '0.18em', marginBottom: 8 }}>
             NEAREST NEIGHBOR
           </div>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--warning)' }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--success)' }}>
             {fmt(nnDistanceKm)} <span style={{ fontSize: 8, fontWeight: 400, color: 'var(--text-muted)' }}>km</span>
           </div>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-muted)', marginTop: 4 }}>
@@ -54,11 +54,11 @@ export default memo(function AlgorithmComparison({ result }) {
         </div>
 
         {/* 2-Opt column */}
-        <div style={{ padding: '10px', background: 'rgba(0,242,254,0.05)', borderRadius: 6, border: '1px solid rgba(0,242,254,0.2)' }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 7, color: 'var(--accent)', letterSpacing: '0.18em', marginBottom: 8 }}>
+        <div style={{ padding: '10px', background: 'rgba(240, 55, 165, 0.08)', borderRadius: 6, border: '1px solid rgba(240, 55, 165, 0.35)' }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 7, color: 'var(--warning)', letterSpacing: '0.18em', marginBottom: 8 }}>
             2-OPT OPTIMIZED
           </div>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--accent)' }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--warning)' }}>
             {fmt(totalDistanceKm)} <span style={{ fontSize: 8, fontWeight: 400, color: 'var(--text-muted)' }}>km</span>
           </div>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-muted)', marginTop: 4 }}>

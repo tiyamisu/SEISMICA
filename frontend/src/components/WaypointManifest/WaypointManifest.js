@@ -48,9 +48,9 @@ export default memo(function WaypointManifest({ quakes, droneIdx }) {
                 gap:         8,
                 padding:     '5px 14px',
                 background:  isDrone
-                  ? 'rgba(255,224,0,0.06)'
-                  : i % 2 === 0 ? 'rgba(0,242,254,0.02)' : 'transparent',
-                borderLeft:  isDrone ? '2px solid #ffe000' : '2px solid transparent',
+                  ? 'rgba(240, 55, 165, 0.08)'
+                  : i % 2 === 0 ? 'rgba(149, 224, 222, 0.05)' : 'transparent',
+                borderLeft:  isDrone ? '2px solid var(--warning)' : '2px solid transparent',
                 transition:  'background 0.3s ease',
               }}
             >
@@ -58,7 +58,7 @@ export default memo(function WaypointManifest({ quakes, droneIdx }) {
               <span style={{
                 fontFamily:  'var(--font-mono)',
                 fontSize:    7,
-                color:       isDrone ? '#ffe000' : 'var(--text-muted)',
+                color:       isDrone ? 'var(--warning)' : 'var(--text-muted)',
                 width:       20,
                 textAlign:   'right',
                 flexShrink:  0,
@@ -76,7 +76,7 @@ export default memo(function WaypointManifest({ quakes, droneIdx }) {
               <span style={{
                 fontFamily:   'var(--font-mono)',
                 fontSize:     8,
-                color:        isDrone ? '#ffe000' : 'var(--text)',
+                color:        isDrone ? 'var(--warning)' : 'var(--text)',
                 flex:         1,
                 overflow:     'hidden',
                 textOverflow: 'ellipsis',

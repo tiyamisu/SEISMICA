@@ -1,20 +1,12 @@
 // ─── Magnitude → visual properties ───────────────────────────────────────────
 
-export const magToColor = (mag) => {
-  if (mag >= 6.0) return '#ff3b3b';
-  if (mag >= 5.0) return '#ff7700';
-  if (mag >= 4.0) return '#ffae00';
-  return '#00ff88';
-};
+import { magToColor as sharedMagToColor, magToLabel as sharedMagToLabel } from './magnitudeScale';
+
+export const magToColor = sharedMagToColor;
 
 export const magToRadius = (mag) => Math.max(4, (mag / 10) * 30);
 
-export const magToLabel = (mag) => {
-  if (mag >= 6.0) return 'MAJOR';
-  if (mag >= 5.0) return 'STRONG';
-  if (mag >= 4.0) return 'MODERATE';
-  return 'MINOR';
-};
+export const magToLabel = sharedMagToLabel;
 
 // ─── Coordinate formatting ────────────────────────────────────────────────────
 

@@ -33,7 +33,7 @@ export default memo(function MissionAnalysis({ result, droneParams }) {
   return (
     <div className="glass-panel" style={{
       padding:   '14px 16px',
-      border:    `1px solid ${feasible ? 'rgba(0,255,136,0.2)' : 'rgba(255,59,59,0.3)'}`,
+      border:    `1px solid ${feasible ? 'rgba(149, 224, 222, 0.25)' : 'rgba(255, 70, 50, 0.35)'}`,
       animation: 'slide-in-up 0.4s ease',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>

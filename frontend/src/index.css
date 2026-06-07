@@ -1,45 +1,43 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=JetBrains+Mono:wght@300;400;500;700&display=swap');
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   RESET & ROOT
-═══════════════════════════════════════════════════════════════════════════ */
-*, *::before, *::after {
+/* ════════════════════════════════ */
+* {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 html, body, #root {
   width: 100%;
   height: 100%;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
-  background: #0a0e17;
+  background: linear-gradient(135deg, #191414, #261e1e) !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CSS CUSTOM PROPERTIES — Design Tokens
-═══════════════════════════════════════════════════════════════════════════ */
+ ═══════════════════════════════════════════════════════════════════════════ */
 :root {
-  --bg:            #0a0e17;
-  --bg-panel:      rgba(8, 14, 26, 0.92);
-  --bg-card:       rgba(0, 242, 254, 0.04);
-  --border:        rgba(0, 242, 254, 0.16);
-  --border-hover:  rgba(0, 242, 254, 0.36);
-  --accent:        #00f2fe;
-  --accent-dim:    rgba(0, 242, 254, 0.10);
-  --accent-glow:   rgba(0, 242, 254, 0.25);
-  --success:       #00ff88;
-  --success-dim:   rgba(0, 255, 136, 0.12);
-  --warning:       #ffae00;
-  --warning-dim:   rgba(255, 174, 0, 0.12);
-  --critical:      #ff3b3b;
-  --critical-dim:  rgba(255, 59, 59, 0.12);
-  --text:          #c8d6e5;
-  --text-muted:    #3a5a70;
-  --text-dim:      #1e3a50;
-  --font-display:  'Orbitron', monospace;
+  --bg:            #191414;
+  --bg-panel:      rgba(32, 27, 27, 0.85);
+  --bg-card:       rgba(45, 37, 37, 0.55);
+  --border:        rgba(149, 224, 222, 0.25);
+  --border-hover:  rgba(149, 224, 222, 0.65);
+  --accent:        #CDF354;
+  --accent-dim:    rgba(205, 243, 84, 0.12);
+  --accent-glow:   rgba(205, 243, 84, 0.35);
+  --success:       #95E0DE;
+  --success-dim:   rgba(149, 224, 222, 0.12);
+  --warning:       #F037A5;
+  --warning-dim:   rgba(240, 55, 165, 0.12);
+  --critical:      #FF4632;
+  --critical-dim:  rgba(255, 70, 50, 0.12);
+  --text:          #95E0DE;
+  --text-muted:    rgba(149, 224, 222, 0.6);
+  --text-dim:      rgba(149, 224, 222, 0.45);
+  --font-display:  'Orbitron', sans-serif;
   --font-mono:     'JetBrains Mono', monospace;
   --radius:        8px;
   --radius-sm:     4px;
@@ -48,7 +46,7 @@ html, body, #root {
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SCROLLBAR
-═══════════════════════════════════════════════════════════════════════════ */
+ ═══════════════════════════════════════════════════════════════════════════ */
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -56,7 +54,7 @@ html, body, #root {
 
 /* ═══════════════════════════════════════════════════════════════════════════
    KEYFRAME ANIMATIONS
-═══════════════════════════════════════════════════════════════════════════ */
+ ═══════════════════════════════════════════════════════════════════════════ */
 
 @keyframes pulse-ring {
   0%   { transform: scale(0.8); opacity: 0.8; }
@@ -120,13 +118,13 @@ html, body, #root {
 }
 
 @keyframes critical-flash {
-  0%, 100% { border-color: var(--critical); box-shadow: 0 0 12px rgba(255,59,59,0.3); }
-  50%       { border-color: rgba(255,59,59,0.3); box-shadow: none; }
+  0%, 100% { border-color: var(--critical); box-shadow: 0 0 12px rgba(255,70,50,0.3); }
+  50%       { border-color: rgba(255,70,50,0.3); box-shadow: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    UTILITY CLASSES
-═══════════════════════════════════════════════════════════════════════════ */
+ ═══════════════════════════════════════════════════════════════════════════ */
 
 .glass-panel {
   background:          var(--bg-panel);
@@ -134,7 +132,7 @@ html, body, #root {
   border-radius:       var(--radius);
   backdrop-filter:     blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow:          0 0 32px rgba(0,242,254,0.04), inset 0 1px 0 rgba(0,242,254,0.06);
+  box-shadow:          0 0 24px rgba(65, 0, 245, 0.12), 0 0 4px rgba(149, 224, 222, 0.04), inset 0 1px 0 rgba(149, 224, 222, 0.08);
 }
 
 .section-title {
@@ -192,22 +190,24 @@ html, body, #root {
   font-family:    var(--font-display);
   font-size:      10px;
   font-weight:    700;
-  letter-spacing: 0.25em;
-  color:          var(--accent);
-  background:     linear-gradient(135deg, rgba(0,80,100,0.5), rgba(0,30,50,0.8));
-  border:         1px solid rgba(0,242,254,0.35);
+  letter-spacing: 0.22em;
+  color:          #95E0DE;
+  background:     linear-gradient(135deg, #4100F5, rgba(65, 0, 245, 0.8));
+  border:         1px solid rgba(149, 224, 222, 0.35);
   border-radius:  var(--radius-sm);
   cursor:         pointer;
-  padding:        10px 18px;
+  padding:        9px 16px;
   transition:     all var(--transition);
   text-transform: uppercase;
   white-space:    nowrap;
+  box-shadow:     0 2px 8px rgba(65, 0, 245, 0.25);
 }
 
 .btn-tactical:hover:not(:disabled) {
-  background:  linear-gradient(135deg, rgba(0,120,150,0.6), rgba(0,60,80,0.9));
-  border-color: var(--accent);
-  box-shadow:   0 0 18px var(--accent-glow);
+  background:  linear-gradient(135deg, #F037A5, rgba(240, 55, 165, 0.85));
+  border-color: #F037A5;
+  color:        #191414;
+  box-shadow:   0 0 18px rgba(240, 55, 165, 0.5);
 }
 
 .btn-tactical:disabled {
@@ -216,10 +216,10 @@ html, body, #root {
 }
 
 .btn-tactical.active {
-  background:   var(--accent-dim);
-  border-color: var(--accent);
-  color:        var(--accent);
-  box-shadow:   0 0 12px var(--accent-glow), inset 0 0 8px var(--accent-dim);
+  background:   #CDF354 !important;
+  border-color: #CDF354 !important;
+  color:        #191414 !important;
+  box-shadow:   0 0 18px rgba(205, 243, 84, 0.5) !important;
 }
 
 .tag-alert {
@@ -281,17 +281,17 @@ html, body, #root {
 .leaflet-container { background: var(--bg) !important; }
 
 .leaflet-popup-content-wrapper {
-  background:   rgba(6, 12, 22, 0.97) !important;
+  background:   rgba(25, 20, 20, 0.97) !important;
   border:       1px solid var(--border) !important;
   border-radius: var(--radius) !important;
   color:        var(--text) !important;
-  box-shadow:   0 0 28px rgba(0,242,254,0.15) !important;
+  box-shadow:   0 0 28px rgba(65, 0, 245, 0.35) !important;
   padding:      0 !important;
   font-family:  var(--font-mono) !important;
 }
 
 .leaflet-popup-content { margin: 14px 16px !important; }
-.leaflet-popup-tip     { background: rgba(0,242,254,0.18) !important; }
+.leaflet-popup-tip     { background: rgba(149, 224, 222, 0.25) !important; }
 .leaflet-popup-close-button { color: var(--text-muted) !important; top: 6px !important; right: 8px !important; font-size: 15px !important; }
 .leaflet-popup-close-button:hover { color: var(--accent) !important; }
 
@@ -300,13 +300,13 @@ html, body, #root {
   border:        1px solid var(--border) !important;
   border-radius: var(--radius-sm) !important;
   overflow:      hidden !important;
-  box-shadow:    0 0 14px rgba(0,242,254,0.08) !important;
+  box-shadow:    0 0 14px rgba(65, 0, 245, 0.2) !important;
   margin-bottom: 12px !important;
   margin-left:   12px !important;
 }
 
 .leaflet-control-zoom a {
-  background:      rgba(8,14,26,0.95) !important;
+  background:      rgba(25, 20, 20, 0.95) !important;
   color:           var(--accent) !important;
   border:          none !important;
   border-bottom:   1px solid var(--border) !important;
@@ -323,8 +323,8 @@ html, body, #root {
 }
 
 .leaflet-control-zoom a:hover {
-  background: rgba(0,242,254,0.12) !important;
-  box-shadow: inset 0 0 8px rgba(0,242,254,0.15) !important;
+  background: rgba(149, 224, 222, 0.20) !important;
+  box-shadow: inset 0 0 8px rgba(149, 224, 222, 0.25) !important;
   color:      #fff !important;
 }
 
@@ -341,13 +341,13 @@ html, body, #root {
 
 /* Tooltip override */
 .leaflet-tooltip {
-  background:   rgba(6, 12, 22, 0.97) !important;
+  background:   rgba(25, 20, 20, 0.97) !important;
   border:       1px solid var(--border) !important;
   border-radius: var(--radius-sm) !important;
   color:        var(--text) !important;
   font-family:  var(--font-mono) !important;
   font-size:    11px !important;
-  box-shadow:   0 0 18px rgba(0,242,254,0.12) !important;
+  box-shadow:   0 0 18px rgba(65, 0, 245, 0.25) !important;
   padding:      8px 12px !important;
   white-space:  nowrap !important;
 }
@@ -366,7 +366,7 @@ input[type='range'] {
   width:        100%;
   height:       3px;
   border-radius: 2px;
-  background:   linear-gradient(90deg, var(--accent), #004060);
+  background:   linear-gradient(90deg, var(--accent), var(--success));
   outline:      none;
   cursor:       pointer;
 }
@@ -376,8 +376,8 @@ input[type='range']::-webkit-slider-thumb {
   width:         14px;
   height:        14px;
   border-radius: 50%;
-  background:    var(--accent);
-  box-shadow:    0 0 8px var(--accent);
+  background:    var(--warning);
+  box-shadow:    0 0 8px var(--warning);
   cursor:        pointer;
 }
 
@@ -385,14 +385,14 @@ input[type='range']::-moz-range-thumb {
   width:         14px;
   height:        14px;
   border-radius: 50%;
-  background:    var(--accent);
-  box-shadow:    0 0 8px var(--accent);
+  background:    var(--warning);
+  box-shadow:    0 0 8px var(--warning);
   cursor:        pointer;
   border:        none;
 }
 
 input[type='number'] {
-  background:    rgba(0,242,254,0.04);
+  background:    rgba(52, 69, 89, 0.4);
   border:        1px solid var(--border);
   border-radius: var(--radius-sm);
   color:         var(--accent);
@@ -437,8 +437,8 @@ input[type='number']:focus {
 
 /* NN route colour token for hover glow */
 :root {
-  --nn-color:  #ffae00;
-  --opt-color: #00f2fe;
+  --nn-color:  #3A7457;
+  --opt-color: #FDC1AF;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

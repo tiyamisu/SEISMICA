@@ -20,6 +20,7 @@ import WaypointManifest    from './components/WaypointManifest/WaypointManifest'
 import Waveform            from './components/Waveform/Waveform';
 import RouteLegend         from './components/RouteLegend/RouteLegend';
 import LiveStatus          from './components/LiveStatus/LiveStatus';
+import { THEME }           from './theme';
 
 // ── Hooks & Services ──────────────────────────────────────────────────────────
 import { useMission, STATUS }  from './hooks/useMission';
@@ -39,12 +40,12 @@ const DEFAULT_DRONE_PARAMS = {
   whPerKm:    0.05,
 };
 
-const BAR_COLORS = ['#00ff88','#00ff88','#00ff88','#00ff88','#ffae00','#ff7700','#ff3b3b','#ff3b3b'];
+const BAR_COLORS = THEME.barColors;
 
 // Algorithm-specific telemetry card highlighting colours
 const FOCUS_COLORS = {
-  nn:   '#ffae00',  // Orange for NN cards
-  '2opt': '#00f2fe', // Cyan for 2-Opt cards
+  nn:   THEME.nnColor,
+  '2opt': THEME.optColor,
   both: null,
 };
 
@@ -55,7 +56,7 @@ function HistoTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
-      background: 'rgba(6,12,22,0.97)', border: '1px solid var(--border)',
+      background: 'rgba(32, 27, 27, 0.97)', border: '1px solid var(--border)',
       borderRadius: 6, padding: '8px 14px',
       fontFamily: 'var(--font-display)', fontSize: 10,
     }}>
@@ -74,21 +75,21 @@ function TelemetryPanel({ result, histData, histLoading, focusedRoute }) {
     {
       label:     'TOTAL DISTANCE',
       value:     `${Number(result.totalDistanceKm).toLocaleString('en-US',{maximumFractionDigits:0})} km`,
-      color:     'var(--accent)',
+      color:     'var(--warning)',
       highlight: optHighlight,
       hColor:    FOCUS_COLORS['2opt'],
     },
     {
       label:     'NN DISTANCE',
       value:     `${Number(result.nnDistanceKm).toLocaleString('en-US',{maximumFractionDigits:0})} km`,
-      color:     'var(--warning)',
+      color:     'var(--success)',
       highlight: nnHighlight,
       hColor:    FOCUS_COLORS.nn,
     },
     {
       label:     'OPTIMISATION',
       value:     `${Number(result.optimisationEfficiency).toFixed(1)}% SAVED`,
-      color:     'var(--success)',
+      color:     'var(--accent)',
       highlight: false,
       hColor:    null,
     },
@@ -97,21 +98,21 @@ function TelemetryPanel({ result, histData, histLoading, focusedRoute }) {
       value:     result.executionTimeMs < 1000
         ? `${result.executionTimeMs.toFixed(1)} ms`
         : `${(result.executionTimeMs / 1000).toFixed(2)} s`,
-      color:     'var(--accent)',
+      color:     'var(--text)',
       highlight: false,
       hColor:    null,
     },
     {
       label:     'NN TIME',
       value:     `${result.nnExecutionMs?.toFixed(2) ?? '—'} ms`,
-      color:     'var(--warning)',
+      color:     'var(--success)',
       highlight: nnHighlight,
       hColor:    FOCUS_COLORS.nn,
     },
     {
       label:     '2-OPT TIME',
       value:     `${result.twoOptExecutionMs?.toFixed(2) ?? '—'} ms`,
-      color:     'var(--success)',
+      color:     'var(--warning)',
       highlight: optHighlight,
       hColor:    FOCUS_COLORS['2opt'],
     },
@@ -159,12 +160,12 @@ function TelemetryPanel({ result, histData, histLoading, focusedRoute }) {
           ) : histData.length > 0 ? (
             <ResponsiveContainer width="100%" height={130}>
               <BarChart data={histData} margin={{ top: 0, right: 4, left: -22, bottom: 0 }} barCategoryGap="20%">
-                <CartesianGrid strokeDasharray="2 4" stroke="rgba(0,242,254,0.07)" vertical={false} />
+                <CartesianGrid strokeDasharray="2 4" stroke="rgba(149, 224, 222, 0.15)" vertical={false} />
                 <XAxis dataKey="range" tick={{ fontFamily: 'var(--font-mono)', fontSize: 7, fill: 'var(--text-muted)' }}
                        axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontFamily: 'var(--font-mono)', fontSize: 7, fill: 'var(--text-muted)' }}
                        axisLine={false} tickLine={false} />
-                <RechartTooltip content={<HistoTooltip />} cursor={{ fill: 'rgba(0,242,254,0.05)' }} />
+                <RechartTooltip content={<HistoTooltip />} cursor={{ fill: 'rgba(149, 224, 222, 0.08)' }} />
                 <Bar dataKey="count" radius={[3, 3, 0, 0]}>
                   {histData.map((_, i) => <Cell key={i} fill={BAR_COLORS[i] || 'var(--accent)'} />)}
                 </Bar>
@@ -297,14 +298,14 @@ export default function App() {
       display:             'grid',
       gridTemplateAreas:   '"topbar topbar topbar" "left map right" "footer footer footer"',
       gridTemplateColumns: '260px 1fr 300px',
-      gridTemplateRows:    '58px 1fr 52px',
-      width:               '100vw',
-      height:              '100vh',
+      gridTemplateRows:    '48px 1fr 40px',
+      width:               '100%',
+      height:              '100%',
       background:          'var(--bg)',
       fontFamily:          'var(--font-display)',
       color:               'var(--text)',
-      gap:                 7,
-      padding:             7,
+      gap:                 8,
+      padding:             8,
       overflow:            'hidden',
     }}>
 
@@ -320,9 +321,9 @@ export default function App() {
         gridArea:      'left',
         display:       'flex',
         flexDirection: 'column',
-        gap:           7,
-        overflowY:     'auto',
-        overflowX:     'hidden',
+        gap:           8,
+        overflow:      'hidden',
+        height:        '100%',
       }}>
         <ControlMatrix
           magnitude={magnitude}     setMagnitude={setMagnitude}
@@ -359,9 +360,10 @@ export default function App() {
         gridArea:  'right',
         display:   'flex',
         flexDirection: 'column',
-        gap:       7,
+        gap:       8,
         overflowY: 'auto',
         overflowX: 'hidden',
+        height:    '100%',
       }}>
 
         {/* Algorithm pipeline progress */}

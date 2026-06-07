@@ -1,5 +1,6 @@
 import React, { memo, useMemo } from 'react';
 import { calcMission, fmt, fmtPct } from '../../utils/formatters';
+import { THEME } from '../../theme';
 
 // ── SVG Battery Arc ───────────────────────────────────────────────────────────
 function BatteryGauge({ pct, feasible }) {
@@ -8,12 +9,12 @@ function BatteryGauge({ pct, feasible }) {
   const cy  = 50;
   const circ = 2 * Math.PI * r;
   const dash  = (Math.min(pct, 100) / 100) * circ;
-  const color = pct > 60 ? '#00ff88' : pct > 30 ? '#ffae00' : '#ff3b3b';
+  const color = pct > 60 ? THEME.border : pct > 30 ? THEME.highlight : THEME.critical;
 
   return (
     <svg width="100" height="100" viewBox="0 0 100 100">
       {/* Track */}
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(0,242,254,0.08)" strokeWidth={7} />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(149, 224, 222, 0.15)" strokeWidth={7} />
       {/* Fill */}
       <circle
         cx={cx} cy={cy} r={r}

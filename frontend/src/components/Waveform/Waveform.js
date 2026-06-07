@@ -20,20 +20,46 @@ export default memo(function Waveform({ quakeCount = 0, active = false }) {
 
       ctx.clearRect(0, 0, W, H);
 
-      // Glow gradient stroke
-      const grad = ctx.createLinearGradient(0, 0, W, 0);
-      grad.addColorStop(0,   'rgba(0,242,254,0)');
-      grad.addColorStop(0.2, 'rgba(0,242,254,0.8)');
-      grad.addColorStop(0.5, active ? 'rgba(255,59,59,0.9)' : 'rgba(0,242,254,0.9)');
-      grad.addColorStop(0.8, 'rgba(0,242,254,0.8)');
-      grad.addColorStop(1,   'rgba(0,242,254,0)');
+      // 1. Draw Accent Highlight Wave in Fuchsia
+      ctx.beginPath();
+      const gradAccent = ctx.createLinearGradient(0, 0, W, 0);
+      gradAccent.addColorStop(0,   'rgba(240, 55, 165, 0)');
+      gradAccent.addColorStop(0.3, 'rgba(240, 55, 165, 0.3)');
+      gradAccent.addColorStop(0.5, 'rgba(240, 55, 165, 0.6)');
+      gradAccent.addColorStop(0.7, 'rgba(240, 55, 165, 0.3)');
+      gradAccent.addColorStop(1,   'rgba(240, 55, 165, 0)');
+
+      ctx.strokeStyle = gradAccent;
+      ctx.lineWidth   = 0.9;
+      ctx.shadowColor = '#4100F5'; // Klein Blue glow
+      ctx.shadowBlur  = 6;
+
+      for (let x = 0; x <= W; x += 3) {
+        const prog = x / W;
+        const y = H / 2 +
+          Math.sin(prog * 14 + t * 1.4)  * amp * H * 0.13 +
+          Math.sin(prog * 6 + t * 0.8)   * amp * H * 0.07 +
+          noise()                        * amp * H * 0.02;
+
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // 2. Draw Main Base Wave in Aquamarine
+      const gradMain = ctx.createLinearGradient(0, 0, W, 0);
+      gradMain.addColorStop(0,   'rgba(149, 224, 222, 0)');
+      gradMain.addColorStop(0.2, 'rgba(149, 224, 222, 0.55)');
+      gradMain.addColorStop(0.5, 'rgba(149, 224, 222, 0.95)');
+      gradMain.addColorStop(0.8, 'rgba(149, 224, 222, 0.55)');
+      gradMain.addColorStop(1,   'rgba(149, 224, 222, 0)');
 
       ctx.beginPath();
-      ctx.strokeStyle = grad;
-      ctx.lineWidth   = 1.6;
-      ctx.shadowColor = active ? '#ff3b3b' : '#00f2fe';
-      ctx.shadowBlur  = 8;
+      ctx.strokeStyle = gradMain;
+      ctx.lineWidth   = 1.8;
+      ctx.shadowColor = '#4100F5'; // Klein Blue glow
+      ctx.shadowBlur  = 12;
 
+      const points = [];
       for (let x = 0; x <= W; x++) {
         const prog = x / W;
         const y = H / 2 +
@@ -42,9 +68,42 @@ export default memo(function Waveform({ quakeCount = 0, active = false }) {
           Math.sin(prog * 45 + t * 2.1)  * amp * H * 0.06 +
           noise()                         * amp * H * 0.03;
 
+        points.push({ x, y });
         x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
       }
       ctx.stroke();
+
+      // 3. Draw Peak and Critical Peak indicators (Citric & Tangerine)
+      if (active && amp > 0.15) {
+        ctx.shadowBlur = 0; // disable shadow for sharp pixel dots
+        for (let i = 15; i < points.length - 15; i += 16) {
+          const { x, y } = points[i];
+          const dev = Math.abs(y - H / 2);
+          const maxPossibleDev = amp * H * 0.36;
+
+          if (dev > maxPossibleDev * 0.65) {
+            // Critical Peak (Tangerine)
+            ctx.fillStyle = '#FF4632';
+            ctx.beginPath();
+            ctx.arc(x, y, 2.5, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Vertical indicator
+            ctx.strokeStyle = 'rgba(255, 70, 50, 0.25)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x, H / 2);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+          } else if (dev > maxPossibleDev * 0.4) {
+            // Peak (Citric)
+            ctx.fillStyle = '#CDF354';
+            ctx.beginPath();
+            ctx.arc(x, y, 1.8, 0, 2 * Math.PI);
+            ctx.fill();
+          }
+        }
+      }
 
       animRef.current = requestAnimationFrame(draw);
     };
@@ -69,13 +128,13 @@ export default memo(function Waveform({ quakeCount = 0, active = false }) {
     <div style={{
       gridArea:   'footer',
       position:   'relative',
-      background: 'rgba(4,8,16,0.95)',
+      background: 'rgba(25, 20, 20, 0.95)',
       borderTop:  '1px solid var(--border)',
       display:    'flex',
       alignItems: 'center',
       padding:    '0 20px',
       gap:        16,
-      height:     52,
+      height:     40,
     }}>
       <span style={{
         fontFamily:    'var(--font-display)',

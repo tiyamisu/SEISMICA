@@ -1,18 +1,12 @@
 import React, { memo } from 'react';
 import { STATUS } from '../../hooks/useMission';
+import { MAG_SCALE } from '../../utils/magnitudeScale';
 
 const TIMEFRAMES = [
   { key: '24h', label: '24 H' },
   { key: '48h', label: '48 H' },
   { key: '7d',  label: '7 D'  },
   { key: '30d', label: '30 D' },
-];
-
-const MAG_SCALE = [
-  { range: '≥ 6.0',     color: '#ff3b3b', label: 'MAJOR'    },
-  { range: '5.0 – 5.9', color: '#ff7700', label: 'STRONG'   },
-  { range: '4.0 – 4.9', color: '#ffae00', label: 'MODERATE' },
-  { range: '< 4.0',     color: '#00ff88', label: 'MINOR'    },
 ];
 
 export default memo(function ControlMatrix({
@@ -33,10 +27,11 @@ export default memo(function ControlMatrix({
 
   return (
     <div className="glass-panel" style={{
-      gridArea:      'left',
       display:       'flex',
       flexDirection: 'column',
       overflow:      'hidden',
+      flex:          1,
+      minHeight:     0,
     }}>
       {/* Panel Header */}
       <div style={{
@@ -165,7 +160,7 @@ export default memo(function ControlMatrix({
             flexDirection: 'column',
             alignItems:    'center',
             gap:           4,
-            boxShadow:     isLoading ? 'none' : '0 0 24px rgba(0,242,254,0.18)',
+            boxShadow:     isLoading ? 'none' : '0 0 24px rgba(65, 0, 245, 0.45)',
           }}
         >
           <span>{isLoading ? '◌  COMPUTING…' : '⬡  DISPATCH DRONE'}</span>

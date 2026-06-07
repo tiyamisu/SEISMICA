@@ -1,8 +1,9 @@
 import React, { memo } from 'react';
+import { THEME } from '../../theme';
 
 // Brand colours kept consistent with the map polylines
-const NN_COLOR   = '#ffae00';   // Orange — Nearest Neighbour
-const OPT_COLOR  = '#00f2fe';   // Cyan   — 2-Opt Optimised
+const NN_COLOR   = THEME.nnColor;
+const OPT_COLOR  = THEME.optColor;
 
 const ROUTES = [
   {

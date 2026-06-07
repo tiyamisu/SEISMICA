@@ -75,7 +75,7 @@ export default memo(function AlertFeed({ entries }) {
                 borderLeft:   `2px solid ${LEVEL_COLOR[entry.type] || 'var(--accent)'}`,
                 marginBottom: 2,
                 borderRadius: '0 3px 3px 0',
-                background:   'rgba(0,242,254,0.02)',
+                background:   'rgba(149, 224, 222, 0.04)',
                 animation:    'alert-in 0.25s ease',
                 lineHeight:   1.5,
               }}

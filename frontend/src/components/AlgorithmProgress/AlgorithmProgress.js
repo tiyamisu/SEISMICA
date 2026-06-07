@@ -58,7 +58,7 @@ export default memo(function AlgorithmProgress({ status, stepIndex }) {
               padding:     '5px 8px',
               borderRadius: 4,
               background:  active ? 'var(--accent-dim)' : 'transparent',
-              border:      active ? '1px solid rgba(0,242,254,0.2)' : '1px solid transparent',
+              border:      active ? '1px solid rgba(149, 224, 222, 0.45)' : '1px solid transparent',
               transition:  'all 0.25s ease',
             }}>
               <span style={{ fontSize: 12, opacity: completed || active ? 1 : 0.25 }}>
