@@ -424,3 +424,53 @@ input[type='number']:focus {
   border-radius: 50%;
   animation:     pulse-ring 2s ease-out infinite;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ROUTE POLYLINE — SVG TRANSITION (smooth opacity/weight on focus change)
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* Leaflet renders polylines as SVG <path> inside a <g> with our className */
+.route-glow path,
+.route-core path {
+  transition: stroke-opacity 0.38s ease, stroke-width 0.38s ease !important;
+}
+
+/* NN route colour token for hover glow */
+:root {
+  --nn-color:  #ffae00;
+  --opt-color: #00f2fe;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LIVE STATUS — SYNC ANIMATION
+═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes syncing-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.sync-spinner {
+  display:        inline-block;
+  animation:      syncing-spin 0.9s linear infinite;
+  transform-origin: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ROUTE LEGEND — HOVER FOCUS CARD
+═══════════════════════════════════════════════════════════════════════════ */
+
+.route-legend-card {
+  transition: opacity 0.35s ease, transform 0.25s ease, border-color 0.35s ease,
+              background 0.35s ease, box-shadow 0.35s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   METRIC CARD — ALGORITHM HIGHLIGHT TRANSITION
+═══════════════════════════════════════════════════════════════════════════ */
+
+.metric-card {
+  transition: border-color 0.35s ease, background 0.35s ease,
+              box-shadow 0.35s ease !important;
+}
+

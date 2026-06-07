@@ -18,28 +18,39 @@ import MissionAnalysis     from './components/MissionAnalysis/MissionAnalysis';
 import AlertFeed           from './components/AlertFeed/AlertFeed';
 import WaypointManifest    from './components/WaypointManifest/WaypointManifest';
 import Waveform            from './components/Waveform/Waveform';
+import RouteLegend         from './components/RouteLegend/RouteLegend';
+import LiveStatus          from './components/LiveStatus/LiveStatus';
 
 // ── Hooks & Services ──────────────────────────────────────────────────────────
-import { useMission, STATUS } from './hooks/useMission';
-import { useStats }           from './hooks/useStats';
-import { useAlertFeed }       from './hooks/useAlertFeed';
-import { api }                from './services/api';
-import { calcMission }        from './utils/formatters';
+import { useMission, STATUS }  from './hooks/useMission';
+import { useStats }            from './hooks/useStats';
+import { useAlertFeed }        from './hooks/useAlertFeed';
+import { useAutoRefresh }      from './hooks/useAutoRefresh';
+import { api }                 from './services/api';
+import { calcMission }         from './utils/formatters';
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Default drone parameters
+//  Constants
 // ─────────────────────────────────────────────────────────────────────────────
 const DEFAULT_DRONE_PARAMS = {
-  capacityWh: 100,   // Wh
-  maxRangeKm: 2000,  // km
-  speedKmh:   120,   // km/h
-  whPerKm:    0.05,  // Wh per km
+  capacityWh: 100,
+  maxRangeKm: 2000,
+  speedKmh:   120,
+  whPerKm:    0.05,
+};
+
+const BAR_COLORS = ['#00ff88','#00ff88','#00ff88','#00ff88','#ffae00','#ff7700','#ff3b3b','#ff3b3b'];
+
+// Algorithm-specific telemetry card highlighting colours
+const FOCUS_COLORS = {
+  nn:   '#ffae00',  // Orange for NN cards
+  '2opt': '#00f2fe', // Cyan for 2-Opt cards
+  both: null,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  TelemetryPanel — Recharts histogram + metric cards
+//  TelemetryPanel — with algorithm-aware card highlighting
 // ─────────────────────────────────────────────────────────────────────────────
-
 function HistoTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
@@ -54,16 +65,56 @@ function HistoTooltip({ active, payload, label }) {
   );
 }
 
-const BAR_COLORS = ['#00ff88','#00ff88','#00ff88','#00ff88','#ffae00','#ff7700','#ff3b3b','#ff3b3b'];
+function TelemetryPanel({ result, histData, histLoading, focusedRoute }) {
+  // Which metric cards get highlighted per algorithm selection
+  const nnHighlight  = focusedRoute === 'nn';
+  const optHighlight = focusedRoute === '2opt';
 
-function TelemetryPanel({ result, histData, histLoading }) {
   const metrics = result ? [
-    { label: 'TOTAL DISTANCE', value: `${Number(result.totalDistanceKm).toLocaleString('en-US',{maximumFractionDigits:0})} km`, color: 'var(--accent)' },
-    { label: 'NN DISTANCE',    value: `${Number(result.nnDistanceKm).toLocaleString('en-US',{maximumFractionDigits:0})} km`,    color: 'var(--warning)' },
-    { label: 'OPTIMISATION',   value: `${Number(result.optimisationEfficiency).toFixed(1)}% SAVED`,                              color: 'var(--success)' },
-    { label: 'EXEC TIME',      value: result.executionTimeMs < 1000 ? `${result.executionTimeMs.toFixed(1)} ms` : `${(result.executionTimeMs/1000).toFixed(2)} s`, color: 'var(--accent)' },
-    { label: 'NN TIME',        value: `${result.nnExecutionMs?.toFixed(2) ?? '—'} ms`,                                           color: 'var(--warning)' },
-    { label: '2-OPT TIME',     value: `${result.twoOptExecutionMs?.toFixed(2) ?? '—'} ms`,                                      color: 'var(--success)' },
+    {
+      label:     'TOTAL DISTANCE',
+      value:     `${Number(result.totalDistanceKm).toLocaleString('en-US',{maximumFractionDigits:0})} km`,
+      color:     'var(--accent)',
+      highlight: optHighlight,
+      hColor:    FOCUS_COLORS['2opt'],
+    },
+    {
+      label:     'NN DISTANCE',
+      value:     `${Number(result.nnDistanceKm).toLocaleString('en-US',{maximumFractionDigits:0})} km`,
+      color:     'var(--warning)',
+      highlight: nnHighlight,
+      hColor:    FOCUS_COLORS.nn,
+    },
+    {
+      label:     'OPTIMISATION',
+      value:     `${Number(result.optimisationEfficiency).toFixed(1)}% SAVED`,
+      color:     'var(--success)',
+      highlight: false,
+      hColor:    null,
+    },
+    {
+      label:     'EXEC TIME',
+      value:     result.executionTimeMs < 1000
+        ? `${result.executionTimeMs.toFixed(1)} ms`
+        : `${(result.executionTimeMs / 1000).toFixed(2)} s`,
+      color:     'var(--accent)',
+      highlight: false,
+      hColor:    null,
+    },
+    {
+      label:     'NN TIME',
+      value:     `${result.nnExecutionMs?.toFixed(2) ?? '—'} ms`,
+      color:     'var(--warning)',
+      highlight: nnHighlight,
+      hColor:    FOCUS_COLORS.nn,
+    },
+    {
+      label:     '2-OPT TIME',
+      value:     `${result.twoOptExecutionMs?.toFixed(2) ?? '—'} ms`,
+      color:     'var(--success)',
+      highlight: optHighlight,
+      hColor:    FOCUS_COLORS['2opt'],
+    },
   ] : [];
 
   return (
@@ -74,10 +125,24 @@ function TelemetryPanel({ result, histData, histLoading }) {
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {metrics.length > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>
-            {metrics.map(({ label, value, color }) => (
-              <div key={label} className="metric-card">
+            {metrics.map(({ label, value, color, highlight, hColor }) => (
+              <div
+                key={label}
+                className="metric-card"
+                style={{
+                  border:     highlight ? `1px solid ${hColor}60` : undefined,
+                  background: highlight ? `${hColor}10` : undefined,
+                  boxShadow:  highlight ? `0 0 10px ${hColor}20` : undefined,
+                  transition: 'all 0.35s ease',
+                }}
+              >
                 <div className="metric-label">{label}</div>
-                <div className="metric-value" style={{ color, fontSize: 11 }}>{value}</div>
+                <div
+                  className="metric-value"
+                  style={{ color: highlight ? hColor : color, fontSize: 11, transition: 'color 0.35s ease' }}
+                >
+                  {value}
+                </div>
               </div>
             ))}
           </div>
@@ -122,14 +187,17 @@ function TelemetryPanel({ result, histData, histLoading }) {
 // ═════════════════════════════════════════════════════════════════════════════
 export default function App() {
   // ── Mission parameters ────────────────────────────────────────────────────
-  const [magnitude,   setMagnitude]   = useState(4.5);
-  const [timeframe,   setTimeframe]   = useState('24h');
-  const [droneParams, setDroneParams] = useState(DEFAULT_DRONE_PARAMS);
+  const [magnitude,    setMagnitude]    = useState(4.5);
+  const [timeframe,    setTimeframe]    = useState('24h');
+  const [droneParams,  setDroneParams]  = useState(DEFAULT_DRONE_PARAMS);
 
-  // ── State hooks ───────────────────────────────────────────────────────────
-  const mission    = useMission();
+  // ── Route focus state — default: 2-Opt selected ───────────────────────────
+  const [focusedRoute, setFocusedRoute] = useState('2opt');
+
+  // ── Core hooks ───────────────────────────────────────────────────────────
+  const mission   = useMission();
   const { stats, loading: statsLoading } = useStats(timeframe);
-  const alertFeed  = useAlertFeed();
+  const alertFeed = useAlertFeed();
 
   // ── History / histogram ───────────────────────────────────────────────────
   const [histData,    setHistData]    = useState([]);
@@ -144,24 +212,21 @@ export default function App() {
   }, [timeframe]);
 
   // ── Drone animation ───────────────────────────────────────────────────────
-  const [droneIdx, setDroneIdx] = useState(-1);
-  const droneTimer = useRef(null);
+  const [droneIdx,  setDroneIdx]  = useState(-1);
+  const droneTimer  = useRef(null);
 
   useEffect(() => {
     clearInterval(droneTimer.current);
     if (mission.quakes.length > 0 && mission.isSuccess) {
       setDroneIdx(0);
-      droneTimer.current = setInterval(
-        () => setDroneIdx((i) => i + 1),
-        900,
-      );
+      droneTimer.current = setInterval(() => setDroneIdx((i) => i + 1), 900);
     } else {
       setDroneIdx(-1);
     }
     return () => clearInterval(droneTimer.current);
   }, [mission.quakes, mission.isSuccess]);
 
-  // ── Populate alert feed after successful dispatch ─────────────────────────
+  // ── Alert feed ────────────────────────────────────────────────────────────
   useEffect(() => {
     if (mission.isSuccess && mission.quakes.length > 0) {
       alertFeed.populateFromRoute(mission.quakes);
@@ -175,7 +240,37 @@ export default function App() {
     mission.dispatch(magnitude, timeframe);
   }, [alertFeed, mission, magnitude, timeframe]);
 
-  // ── Battery feasibility → polyline colour ─────────────────────────────────
+  // ── Track whether user has dispatched at least once ───────────────────────
+  const hasDispatchedRef = useRef(false);
+  useEffect(() => {
+    if (mission.isSuccess) hasDispatchedRef.current = true;
+  }, [mission.isSuccess]);
+
+  // ── Auto-refresh: stable refs for current params ──────────────────────────
+  const magnitudeRef = useRef(magnitude);
+  const timeframeRef = useRef(timeframe);
+  useEffect(() => { magnitudeRef.current = magnitude; }, [magnitude]);
+  useEffect(() => { timeframeRef.current = timeframe; }, [timeframe]);
+
+  // dispatchRef keeps useAutoRefresh's refreshFn stable across re-renders
+  const dispatchRef = useRef(mission.dispatch);
+  useEffect(() => { dispatchRef.current = mission.dispatch; }, [mission.dispatch]);
+
+  const autoRefreshCb = useCallback(async () => {
+    if (!hasDispatchedRef.current) return;
+    alertFeed.clear();
+    await dispatchRef.current(magnitudeRef.current, timeframeRef.current);
+  }, [alertFeed]);
+
+  const {
+    syncStatus,
+    lastUpdated,
+    countdown,
+    errorMsg,
+    manualRefresh,
+  } = useAutoRefresh(autoRefreshCb, hasDispatchedRef.current && mission.isSuccess);
+
+  // ── Battery feasibility → map polyline colour ─────────────────────────────
   const routeFailed = useMemo(() => {
     if (!mission.result?.totalDistanceKm) return false;
     const m = calcMission(
@@ -188,7 +283,7 @@ export default function App() {
     return m ? !m.feasible : false;
   }, [mission.result, droneParams]);
 
-  // ── Status string for ControlMatrix ──────────────────────────────────────
+  // ── ControlMatrix status ──────────────────────────────────────────────────
   const cmStatus = mission.status === STATUS.LOADING ? STATUS.LOADING
     : mission.status === STATUS.SUCCESS              ? STATUS.SUCCESS
     : mission.status === STATUS.ERROR                ? STATUS.ERROR
@@ -226,16 +321,26 @@ export default function App() {
         display:       'flex',
         flexDirection: 'column',
         gap:           7,
-        overflow:      'hidden',
+        overflowY:     'auto',
+        overflowX:     'hidden',
       }}>
-        {/* Control Matrix */}
         <ControlMatrix
-          magnitude={magnitude}   setMagnitude={setMagnitude}
-          timeframe={timeframe}   setTimeframe={setTimeframe}
+          magnitude={magnitude}     setMagnitude={setMagnitude}
+          timeframe={timeframe}     setTimeframe={setTimeframe}
           droneParams={droneParams} setDroneParams={setDroneParams}
           onDispatch={handleDispatch}
           status={cmStatus}
           quakeCount={mission.quakes.length}
+        />
+
+        {/* Live auto-refresh status */}
+        <LiveStatus
+          syncStatus={syncStatus}
+          lastUpdated={lastUpdated}
+          countdown={countdown}
+          errorMsg={errorMsg}
+          onManualRefresh={manualRefresh}
+          hasDispatched={mission.isSuccess || hasDispatchedRef.current}
         />
       </div>
 
@@ -243,18 +348,20 @@ export default function App() {
       <TacticalMap
         quakes={mission.quakes}
         polyline={mission.polyline}
+        nnPolyline={mission.nnPolyline}
         droneIdx={droneIdx}
         routeFailed={routeFailed}
+        focusedRoute={focusedRoute}
       />
 
       {/* ── RIGHT PANEL ──────────────────────────────────────────────────── */}
       <div style={{
-        gridArea:      'right',
-        display:       'flex',
+        gridArea:  'right',
+        display:   'flex',
         flexDirection: 'column',
-        gap:           7,
-        overflowY:     'auto',
-        overflowX:     'hidden',
+        gap:       7,
+        overflowY: 'auto',
+        overflowX: 'hidden',
       }}>
 
         {/* Algorithm pipeline progress */}
@@ -263,14 +370,22 @@ export default function App() {
           stepIndex={mission.stepIndex}
         />
 
-        {/* Telemetry + histogram */}
+        {/* Route legend — interactive focus toggle */}
+        <RouteLegend
+          focusedRoute={focusedRoute}
+          setFocusedRoute={setFocusedRoute}
+          result={mission.result}
+        />
+
+        {/* Telemetry with algorithm-aware card highlighting */}
         <TelemetryPanel
           result={mission.result}
           histData={histData}
           histLoading={histLoading}
+          focusedRoute={focusedRoute}
         />
 
-        {/* NN vs 2-Opt side-by-side */}
+        {/* NN vs 2-Opt side-by-side comparison */}
         {mission.result && <AlgorithmComparison result={mission.result} />}
 
         {/* Battery simulation */}
@@ -287,7 +402,7 @@ export default function App() {
           />
         )}
 
-        {/* Scrollable waypoint list */}
+        {/* Waypoint manifest */}
         {mission.quakes.length > 0 && (
           <WaypointManifest
             quakes={mission.quakes}

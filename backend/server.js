@@ -260,7 +260,7 @@ app.get('/api/route', async (req, res) => {
 
     if (filtered.length === 0) {
       return res.json({
-        route: [], totalDistanceKm: 0, nnDistanceKm: 0,
+        route: [], nnRoute: [], totalDistanceKm: 0, nnDistanceKm: 0,
         optimisationEfficiency: 0, nnExecutionMs: 0, twoOptExecutionMs: 0,
         executionTimeMs: execMs(), timeframe: req.query.timeframe || '24h',
       });
@@ -268,19 +268,20 @@ app.get('/api/route', async (req, res) => {
 
     if (filtered.length === 1) {
       return res.json({
-        route: filtered, totalDistanceKm: 0, nnDistanceKm: 0,
+        route: filtered, nnRoute: filtered, totalDistanceKm: 0, nnDistanceKm: 0,
         optimisationEfficiency: 0, nnExecutionMs: 0, twoOptExecutionMs: 0,
         executionTimeMs: execMs(), timeframe: req.query.timeframe || '24h',
       });
     }
 
     const {
-      optimisedTour, optimisedDistance, nnDistance,
+      optimisedTour, optimisedDistance, nnTour, nnDistance,
       efficiency, nnExecutionMs, twoOptExecutionMs,
     } = solveTSP(filtered);
 
     return res.json({
       route:                  optimisedTour.slice(0, -1).map((idx) => filtered[idx]),
+      nnRoute:                nnTour.slice(0, -1).map((idx) => filtered[idx]),
       totalDistanceKm:        optimisedDistance,
       nnDistanceKm:           nnDistance,
       optimisationEfficiency: efficiency,
