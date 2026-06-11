@@ -1,20 +1,20 @@
 import React, { memo, useMemo } from 'react';
 import { calcMission, fmt, fmtPct } from '../../utils/formatters';
-import { THEME } from '../../theme';
+import { useTheme } from '../../context/ThemeContext';
 
 // ── SVG Battery Arc ───────────────────────────────────────────────────────────
-function BatteryGauge({ pct, feasible }) {
-  const r   = 36;
-  const cx  = 50;
-  const cy  = 50;
+function BatteryGauge({ pct, feasible, theme, isDark }) {
+  const r    = 36;
+  const cx   = 50;
+  const cy   = 50;
   const circ = 2 * Math.PI * r;
   const dash  = (Math.min(pct, 100) / 100) * circ;
-  const color = pct > 60 ? THEME.border : pct > 30 ? THEME.highlight : THEME.critical;
+  const color = pct > 60 ? theme.success : pct > 30 ? theme.warning : theme.critical;
 
   return (
     <svg width="100" height="100" viewBox="0 0 100 100">
       {/* Track */}
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(149, 224, 222, 0.15)" strokeWidth={7} />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--battery-gauge-track)" strokeWidth={7} />
       {/* Fill */}
       <circle
         cx={cx} cy={cy} r={r}
@@ -24,7 +24,10 @@ function BatteryGauge({ pct, feasible }) {
         strokeDasharray={`${dash} ${circ}`}
         strokeDashoffset={circ * 0.25}
         strokeLinecap="round"
-        style={{ filter: `drop-shadow(0 0 4px ${color})`, transition: 'stroke-dasharray 0.6s ease' }}
+        style={{
+          filter:     isDark ? `drop-shadow(0 0 4px ${color})` : 'none',
+          transition: 'stroke-dasharray 0.6s ease',
+        }}
       />
       {/* Label */}
       <text x={cx} y={cy - 4} textAnchor="middle" fill={color}
@@ -42,6 +45,7 @@ function BatteryGauge({ pct, feasible }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default memo(function BatterySimulation({ totalDistKm, droneParams }) {
+  const { isDark, theme } = useTheme();
   const mission = useMemo(() => {
     if (!totalDistKm) return null;
     return calcMission(
@@ -80,7 +84,7 @@ export default memo(function BatterySimulation({ totalDistKm, droneParams }) {
 
           {/* Gauge + stats */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <BatteryGauge pct={mission.batteryUsedPct} feasible={mission.feasible} />
+            <BatteryGauge pct={mission.batteryUsedPct} feasible={mission.feasible} theme={theme} isDark={isDark} />
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
               {[
                 { label: 'STATUS',     value: mission.feasible ? 'FEASIBLE' : 'FAILURE', color: mission.feasible ? 'var(--success)' : 'var(--critical)' },

@@ -6,6 +6,12 @@ const LEVEL_COLOR = {
   ALERT:    'var(--accent)',
 };
 
+const LEVEL_BG = {
+  CRITICAL: 'var(--alert-critical-bg)',
+  WARNING:  'var(--alert-warning-bg)',
+  ALERT:    'var(--alert-accent-bg)',
+};
+
 export default memo(function AlertFeed({ entries }) {
   const bottomRef = useRef(null);
 
@@ -71,11 +77,11 @@ export default memo(function AlertFeed({ entries }) {
                 display:      'flex',
                 alignItems:   'flex-start',
                 gap:          8,
-                padding:      '4px 10px',
+                padding:      '5px 10px',
                 borderLeft:   `2px solid ${LEVEL_COLOR[entry.type] || 'var(--accent)'}`,
                 marginBottom: 2,
-                borderRadius: '0 3px 3px 0',
-                background:   'rgba(149, 224, 222, 0.04)',
+                borderRadius: '0 4px 4px 0',
+                background:   LEVEL_BG[entry.type] || 'var(--alert-accent-bg)',
                 animation:    'alert-in 0.25s ease',
                 lineHeight:   1.5,
               }}
@@ -100,7 +106,7 @@ export default memo(function AlertFeed({ entries }) {
               <span style={{ color: 'var(--warning)', fontWeight: 700, flexShrink: 0 }}>
                 M{entry.mag?.toFixed(1)}
               </span>
-              <span style={{ color: 'var(--text)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span style={{ color: 'var(--text)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 9 }}>
                 {entry.place}
               </span>
             </div>

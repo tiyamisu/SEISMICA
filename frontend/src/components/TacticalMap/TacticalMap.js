@@ -4,18 +4,13 @@ import {
 } from 'react-leaflet';
 import { magToColor, magToRadius, DEFAULT_CENTER, DEFAULT_ZOOM } from '../../utils/mapHelpers';
 import { fmtTimestamp } from '../../utils/formatters';
-import { THEME } from '../../theme';
+import { useTheme } from '../../context/ThemeContext';
 
 // ── Tile provider: Stadia Maps Alidade Smooth Dark
 //    ✓ English-only labels worldwide
 //    ✓ Dark tactical aesthetic
-//    const TILE_URL  = 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png';
 const TILE_URL  = 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png';
 const TILE_ATTR = '&copy; <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>';
-
-// Route colours — kept in sync with RouteLegend.js
-const NN_COLOR  = THEME.nnColor;   // Violet  — Nearest Neighbour
-const OPT_COLOR = THEME.optColor;  // Gold    — 2-Opt Optimised
 
 // ── Auto-fit map bounds when route changes ────────────────────────────────────
 function MapFit({ quakes }) {
@@ -80,16 +75,16 @@ const QuakeMarker = memo(({ quake, idx }) => {
 });
 
 // ── Drone position marker ─────────────────────────────────────────────────────
-const DroneMarker = memo(({ quake, idx }) => {
+const DroneMarker = memo(({ quake, idx, criticalColor }) => {
   if (!quake) return null;
   return (
     <CircleMarker
       center={[quake.latitude, quake.longitude]}
       radius={11}
-      pathOptions={{ color: THEME.critical, fillColor: THEME.critical, fillOpacity: 1, weight: 2.5 }}
+      pathOptions={{ color: criticalColor, fillColor: criticalColor, fillOpacity: 1, weight: 2.5 }}
     >
       <Tooltip permanent direction="top" offset={[0, -14]} opacity={1}>
-        <span style={{ fontFamily: 'var(--font-display)', fontSize: 8, color: THEME.critical, letterSpacing: '0.12em' }}>
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 8, color: criticalColor, letterSpacing: '0.12em' }}>
           ✈ WPT {idx + 1}
         </span>
       </Tooltip>
@@ -148,6 +143,10 @@ export default function TacticalMap({
   routeFailed,
   focusedRoute,   // 'nn' | '2opt' | 'both'
 }) {
+  const { theme } = useTheme();
+  const NN_COLOR  = theme.nnColor;
+  const OPT_COLOR = theme.optColor;
+
   const droneQuake = quakes.length > 0 && droneIdx >= 0
     ? quakes[droneIdx % quakes.length]
     : null;
@@ -211,6 +210,7 @@ export default function TacticalMap({
         <DroneMarker
           quake={droneQuake}
           idx={droneIdx >= 0 ? droneIdx % Math.max(1, quakes.length) : 0}
+          criticalColor={theme.critical}
         />
       </MapContainer>
 
@@ -221,7 +221,7 @@ export default function TacticalMap({
           bottom:         16,
           left:           '50%',
           transform:      'translateX(-50%)',
-          background:     'rgba(32, 27, 27, 0.92)',
+          background:     'var(--map-overlay-bg)',
           border:         `1px solid ${routeFailed ? 'var(--critical)' : 'var(--border)'}`,
           borderRadius:   6,
           padding:        '7px 20px',
@@ -233,7 +233,7 @@ export default function TacticalMap({
           backdropFilter: 'blur(8px)',
           zIndex:         800,
           whiteSpace:     'nowrap',
-          boxShadow:      `0 0 16px ${routeFailed ? 'rgba(214,54,97,0.2)' : 'rgba(58,116,87,0.15)'}`,
+          boxShadow:      `var(--map-overlay-shadow)`,
         }}>
           {routeFailed
             ? `⚠ ROUTE EXCEEDS RANGE — ${quakes.length} WAYPOINTS`
@@ -264,7 +264,7 @@ export default function TacticalMap({
           position:       'absolute',
           top:            12,
           right:          12,
-          background:     'rgba(32, 27, 27, 0.88)',
+          background:     'var(--map-minilegend-bg)',
           border:         '1px solid var(--border)',
           borderRadius:   5,
           padding:        '6px 10px',

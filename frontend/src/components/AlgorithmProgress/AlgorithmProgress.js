@@ -32,16 +32,15 @@ export default memo(function AlgorithmProgress({ status, stepIndex }) {
 
       {/* Progress bar */}
       <div style={{
-        height:        4, borderRadius: 2, background: 'var(--bg-card)',
+        height:        5, borderRadius: 3, background: 'var(--progress-track-bg)',
         border:        '1px solid var(--border)', marginBottom: 12, overflow: 'hidden',
       }}>
         <div style={{
           height:        '100%',
           width:         `${Math.min(pct, 100)}%`,
           background:    err ? 'var(--critical)' : `linear-gradient(90deg, var(--accent), var(--success))`,
-          borderRadius:  2,
+          borderRadius:  3,
           transition:    'width 0.4s ease',
-          boxShadow:     err ? '0 0 8px var(--critical)' : '0 0 8px var(--accent-glow)',
         }} />
       </div>
 
@@ -58,7 +57,7 @@ export default memo(function AlgorithmProgress({ status, stepIndex }) {
               padding:     '5px 8px',
               borderRadius: 4,
               background:  active ? 'var(--accent-dim)' : 'transparent',
-              border:      active ? '1px solid rgba(149, 224, 222, 0.45)' : '1px solid transparent',
+              border:      active ? '1px solid var(--step-active-border)' : '1px solid transparent',
               transition:  'all 0.25s ease',
             }}>
               <span style={{ fontSize: 12, opacity: completed || active ? 1 : 0.25 }}>

@@ -1,30 +1,29 @@
 import React, { memo } from 'react';
-import { THEME } from '../../theme';
-
-// Brand colours kept consistent with the map polylines
-const NN_COLOR   = THEME.nnColor;
-const OPT_COLOR  = THEME.optColor;
-
-const ROUTES = [
-  {
-    key:   'nn',
-    label: 'NEAREST NEIGHBOUR',
-    desc:  'Initial greedy route',
-    color: NN_COLOR,
-    distKey: 'nnDistanceKm',
-    msKey:   'nnExecutionMs',
-  },
-  {
-    key:   '2opt',
-    label: '2-OPT OPTIMISED',
-    desc:  'Locally optimal route',
-    color: OPT_COLOR,
-    distKey: 'totalDistanceKm',
-    msKey:   'twoOptExecutionMs',
-  },
-];
+import { useTheme } from '../../context/ThemeContext';
 
 export default memo(function RouteLegend({ focusedRoute, setFocusedRoute, result }) {
+  const { theme } = useTheme();
+
+  // Route definitions built from active theme — updates when theme switches
+  const ROUTES = [
+    {
+      key:     'nn',
+      label:   'NEAREST NEIGHBOUR',
+      desc:    'Initial greedy route',
+      color:   theme.nnColor,
+      distKey: 'nnDistanceKm',
+      msKey:   'nnExecutionMs',
+    },
+    {
+      key:     '2opt',
+      label:   '2-OPT OPTIMISED',
+      desc:    'Locally optimal route',
+      color:   theme.optColor,
+      distKey: 'totalDistanceKm',
+      msKey:   'twoOptExecutionMs',
+    },
+  ];
+
   if (!result?.route?.length) return null;
 
   const handleClick = (key) => {
@@ -53,7 +52,7 @@ export default memo(function RouteLegend({ focusedRoute, setFocusedRoute, result
               cursor:        'pointer',
               transition:    'all var(--transition)',
             }}
-            onMouseEnter={(e) => { e.target.style.color = 'var(--accent)'; e.target.style.borderColor = 'var(--accent)'; }}
+            onMouseEnter={(e) => { e.target.style.color = 'var(--accent)'; e.target.style.borderColor = 'var(--border-hover)'; }}
             onMouseLeave={(e) => { e.target.style.color = 'var(--text-muted)'; e.target.style.borderColor = 'var(--border)'; }}
           >
             SHOW BOTH

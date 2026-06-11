@@ -4,7 +4,21 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#191414" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#EEF2F9" media="(prefers-color-scheme: light)" />
+    <!-- Anti-flash: apply theme class before first React paint -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('seismica-theme');
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var isDark = stored ? stored === 'dark' : (prefersDark !== false);
+          document.documentElement.classList.add(isDark ? 'theme-dark' : 'theme-light');
+        } catch (e) {
+          document.documentElement.classList.add('theme-dark');
+        }
+      })();
+    </script>
     <meta
       name="description"
       content="Seismica: Real-time earthquake drone routing powered by USGS live data and TSP optimisation"

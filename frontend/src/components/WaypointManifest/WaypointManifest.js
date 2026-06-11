@@ -48,8 +48,8 @@ export default memo(function WaypointManifest({ quakes, droneIdx }) {
                 gap:         8,
                 padding:     '5px 14px',
                 background:  isDrone
-                  ? 'rgba(240, 55, 165, 0.08)'
-                  : i % 2 === 0 ? 'rgba(149, 224, 222, 0.05)' : 'transparent',
+                  ? 'var(--waypoint-drone-bg)'
+                  : i % 2 === 0 ? 'var(--waypoint-zebra-bg)' : 'transparent',
                 borderLeft:  isDrone ? '2px solid var(--warning)' : '2px solid transparent',
                 transition:  'background 0.3s ease',
               }}

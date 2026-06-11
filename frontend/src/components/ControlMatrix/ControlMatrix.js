@@ -160,7 +160,7 @@ export default memo(function ControlMatrix({
             flexDirection: 'column',
             alignItems:    'center',
             gap:           4,
-            boxShadow:     isLoading ? 'none' : '0 0 24px rgba(65, 0, 245, 0.45)',
+            boxShadow:     isLoading ? 'none' : 'var(--btn-dispatch-shadow)',
           }}
         >
           <span>{isLoading ? '◌  COMPUTING…' : '⬡  DISPATCH DRONE'}</span>

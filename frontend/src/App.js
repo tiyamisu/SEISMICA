@@ -20,7 +20,7 @@ import WaypointManifest    from './components/WaypointManifest/WaypointManifest'
 import Waveform            from './components/Waveform/Waveform';
 import RouteLegend         from './components/RouteLegend/RouteLegend';
 import LiveStatus          from './components/LiveStatus/LiveStatus';
-import { THEME }           from './theme';
+import { useTheme } from './context/ThemeContext';
 
 // ── Hooks & Services ──────────────────────────────────────────────────────────
 import { useMission, STATUS }  from './hooks/useMission';
@@ -40,14 +40,8 @@ const DEFAULT_DRONE_PARAMS = {
   whPerKm:    0.05,
 };
 
-const BAR_COLORS = THEME.barColors;
-
-// Algorithm-specific telemetry card highlighting colours
-const FOCUS_COLORS = {
-  nn:   THEME.nnColor,
-  '2opt': THEME.optColor,
-  both: null,
-};
+// BAR_COLORS and FOCUS_COLORS are now computed inside TelemetryPanel
+// so they react to theme changes via useTheme()
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  TelemetryPanel — with algorithm-aware card highlighting
@@ -56,18 +50,25 @@ function HistoTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
-      background: 'rgba(32, 27, 27, 0.97)', border: '1px solid var(--border)',
-      borderRadius: 6, padding: '8px 14px',
-      fontFamily: 'var(--font-display)', fontSize: 10,
+      background:   'var(--bg-panel)',
+      border:       '1px solid var(--border)',
+      borderRadius: 8,
+      padding:      '8px 14px',
+      fontFamily:   'var(--font-display)',
+      fontSize:     10,
+      boxShadow:    'var(--glass-shadow)',
     }}>
-      <div style={{ color: 'var(--text-muted)', marginBottom: 4 }}>MAG {label}</div>
+      <div style={{ color: 'var(--text-muted)', marginBottom: 4, letterSpacing: '0.10em' }}>MAG {label}</div>
       <div style={{ color: 'var(--accent)', fontWeight: 700 }}>{payload[0].value} EVENTS</div>
     </div>
   );
 }
 
 function TelemetryPanel({ result, histData, histLoading, focusedRoute }) {
-  // Which metric cards get highlighted per algorithm selection
+  const { theme } = useTheme();
+  // Derive theme-sensitive constants
+  const BAR_COLORS  = theme.barColors;
+  const FOCUS_COLORS = { nn: theme.nnColor, '2opt': theme.optColor, both: null };
   const nnHighlight  = focusedRoute === 'nn';
   const optHighlight = focusedRoute === '2opt';
 
@@ -160,12 +161,12 @@ function TelemetryPanel({ result, histData, histLoading, focusedRoute }) {
           ) : histData.length > 0 ? (
             <ResponsiveContainer width="100%" height={130}>
               <BarChart data={histData} margin={{ top: 0, right: 4, left: -22, bottom: 0 }} barCategoryGap="20%">
-                <CartesianGrid strokeDasharray="2 4" stroke="rgba(149, 224, 222, 0.15)" vertical={false} />
+                <CartesianGrid strokeDasharray="2 4" stroke="rgba(14, 30, 64, 0.07)" vertical={false} />
                 <XAxis dataKey="range" tick={{ fontFamily: 'var(--font-mono)', fontSize: 7, fill: 'var(--text-muted)' }}
                        axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontFamily: 'var(--font-mono)', fontSize: 7, fill: 'var(--text-muted)' }}
                        axisLine={false} tickLine={false} />
-                <RechartTooltip content={<HistoTooltip />} cursor={{ fill: 'rgba(149, 224, 222, 0.08)' }} />
+                <RechartTooltip content={<HistoTooltip />} cursor={{ fill: 'rgba(46, 15, 191, 0.05)' }} />
                 <Bar dataKey="count" radius={[3, 3, 0, 0]}>
                   {histData.map((_, i) => <Cell key={i} fill={BAR_COLORS[i] || 'var(--accent)'} />)}
                 </Bar>

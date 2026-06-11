@@ -41,9 +41,9 @@ export default memo(function AlgorithmComparison({ result }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
 
         {/* NN column */}
-        <div style={{ padding: '10px', background: 'rgba(149, 224, 222, 0.08)', borderRadius: 6, border: '1px solid rgba(149, 224, 222, 0.35)' }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 7, color: 'var(--success)', letterSpacing: '0.18em', marginBottom: 8 }}>
-            NEAREST NEIGHBOR
+        <div style={{ padding: '10px', background: 'var(--algo-nn-bg)', borderRadius: 7, border: '1px solid var(--algo-nn-border)' }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 7, fontWeight: 600, color: 'var(--success)', letterSpacing: '0.18em', marginBottom: 8, textTransform: 'uppercase' }}>
+            Nearest Neighbor
           </div>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--success)' }}>
             {fmt(nnDistanceKm)} <span style={{ fontSize: 8, fontWeight: 400, color: 'var(--text-muted)' }}>km</span>
@@ -54,9 +54,9 @@ export default memo(function AlgorithmComparison({ result }) {
         </div>
 
         {/* 2-Opt column */}
-        <div style={{ padding: '10px', background: 'rgba(240, 55, 165, 0.08)', borderRadius: 6, border: '1px solid rgba(240, 55, 165, 0.35)' }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 7, color: 'var(--warning)', letterSpacing: '0.18em', marginBottom: 8 }}>
-            2-OPT OPTIMIZED
+        <div style={{ padding: '10px', background: 'var(--algo-opt-bg)', borderRadius: 7, border: '1px solid var(--algo-opt-border)' }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 7, fontWeight: 600, color: 'var(--warning)', letterSpacing: '0.18em', marginBottom: 8, textTransform: 'uppercase' }}>
+            2-Opt Optimized
           </div>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--warning)' }}>
             {fmt(totalDistanceKm)} <span style={{ fontSize: 8, fontWeight: 400, color: 'var(--text-muted)' }}>km</span>
@@ -75,14 +75,13 @@ export default memo(function AlgorithmComparison({ result }) {
             {fmtPct(optimisationEfficiency)}
           </span>
         </div>
-        <div style={{ height: 3, borderRadius: 2, background: 'var(--bg-card)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+        <div style={{ height: 4, borderRadius: 3, background: 'var(--progress-track-bg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
           <div style={{
             height: '100%',
             width:  `${Math.min(optimisationEfficiency || 0, 100)}%`,
             background: 'linear-gradient(90deg, var(--accent), var(--success))',
-            borderRadius: 2,
+            borderRadius: 3,
             transition: 'width 0.6s ease',
-            boxShadow: '0 0 8px var(--accent-glow)',
           }} />
         </div>
       </div>

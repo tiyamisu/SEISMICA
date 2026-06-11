@@ -95,7 +95,7 @@ export default memo(function LiveStatus({
         {/* Countdown */}
         <div style={{
           background:   'var(--bg-card)',
-          border:       `1px solid ${hasDispatched ? 'var(--border)' : 'rgba(58, 116, 87, 0.08)'}`,
+          border:        `1px solid ${hasDispatched ? 'var(--border)' : 'rgba(14, 30, 64, 0.06)'}`,
           borderRadius: 4,
           padding:      '5px 8px',
         }}>
