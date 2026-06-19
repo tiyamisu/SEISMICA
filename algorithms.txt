@@ -1,0 +1,278 @@
+================================================================================
+                         SEISMICA: ALGORITHMS REFERENCE
+================================================================================
+This file documents the four primary algorithms used in the Seismica project,
+using the exact variable names, functions, and logic implemented in the
+source code and documented in the project specifications.
+
+--------------------------------------------------------------------------------
+1. FLOYD-WARSHALL ALGORITHM (Ground Routing & Rerouting)
+--------------------------------------------------------------------------------
+Used for All-Pairs Shortest Path (APSP) calculations on the municipal transit
+network to route ground rescue vehicles around dynamic road blockages.
+
+• Adjacency matrix element values:
+  - W[i][j] = 0 (if i = j)
+  - W[i][j] = distance/time (if a direct edge exists between i and j)
+  - W[i][j] = Infinity (if no direct road segment exists, or road is blocked)
+
+• JavaScript / Node.js Implementation:
+```javascript
+function floydWarshall(W, V) {
+  // Initialize D (distance) and P (predecessor) matrices
+  const D = Array.from({ length: V }, () => new Float64Array(V));
+  const P = Array.from({ length: V }, () => new Array(V).fill(null));
+
+  for (let i = 0; i < V; i++) {
+    for (let j = 0; j < V; j++) {
+      D[i][j] = W[i][j];
+      if (i !== j && W[i][j] < Infinity) {
+        P[i][j] = i;
+      } else {
+        P[i][j] = null;
+      }
+    }
+  }
+
+  // Core Dynamic Programming iterations
+  for (let k = 0; k < V; k++) {
+    for (let i = 0; i < V; i++) {
+      for (let j = 0; j < V; j++) {
+        if (D[i][k] + D[k][j] < D[i][j]) {
+          D[i][j] = D[i][k] + D[k][j];
+          P[i][j] = P[k][j];
+        }
+      }
+    }
+  }
+
+  return { D, P };
+}
+
+// Function to reconstruct the actual path between source (start) and target (end)
+function reconstructPath(start, end, P) {
+  if (P[start][end] === null) return [];
+  const path = [end];
+  let cur = end;
+  while (cur !== start) {
+    cur = P[start][cur];
+    if (cur === null) return [];
+    path.unshift(cur);
+  }
+  return path;
+}
+```
+
+• Variable Definitions:
+  - W: The V x V graph adjacency weight matrix representing the municipal transit network.
+       W[i][j] holds the routing distance (or weight) of the direct road segment connecting
+       intersection i to intersection j.
+  - V: An integer representing the total count of vertices (intersections, shelters, hotspots) 
+       in the graph network model.
+  - D: The V x V shortest-path distance matrix computed dynamically.
+       D[i][j] stores the final shortest geodesic path cost from vertex i to vertex j.
+  - P: The V x V predecessor matrix. P[i][j] tracks the parent/previous node index
+       used to transition to node j on the optimal path starting from node i.
+  - i: An integer loop counter and index. In Floyd-Warshall, it denotes the start/source
+       vertex index (runs from 0 to V - 1) of a potential path.
+  - j: An integer loop counter and index. In Floyd-Warshall, it denotes the destination/target
+       vertex index (runs from 0 to V - 1) of a potential path.
+  - k: An integer loop counter and index. In Floyd-Warshall, it denotes the index of the 
+       intermediate vertex (runs from 0 to V - 1) which is evaluated as a potential shortcut 
+       between start node i and end node j.
+  - start: An integer index denoting the initial source vertex for path reconstruction.
+  - end: An integer index denoting the final destination vertex for path reconstruction.
+  - cur: An integer index tracking the current node in the back-traversal path reconstruction
+         from target (end) to source (start).
+  - path: An array of integers containing the sequential vertex indices representing the reconstructed
+          shortest route from start to end.
+
+
+--------------------------------------------------------------------------------
+2. NEAREST NEIGHBOUR (Constructive TSP Heuristic)
+--------------------------------------------------------------------------------
+Generates a greedy initial tour for aerial drone reconnaissance paths starting from
+the base station (index 0) and always visiting the nearest unvisited seismic epicenter.
+
+• JavaScript / Node.js Implementation (from backend/server.js):
+```javascript
+function nearestNeighbour(matrix) {
+  const n       = matrix.length;
+  const visited = new Uint8Array(n);
+  const tour    = [0];
+  visited[0]    = 1;
+  for (let step = 1; step < n; step++) {
+    const cur = tour[tour.length - 1];
+    let best = -1, bestD = Infinity;
+    for (let j = 0; j < n; j++) {
+      if (!visited[j] && matrix[cur][j] < bestD) { 
+        bestD = matrix[cur][j]; 
+        best = j; 
+      }
+    }
+    tour.push(best);
+    visited[best] = 1;
+  }
+  tour.push(0);
+  return tour;
+}
+```
+
+• Variable Definitions:
+  - matrix: The symmetric N x N distance matrix. matrix[i][j] stores the great-circle
+            geodesic distance (in kilometers) between location index i and location index j.
+  - n: An integer representing the total count of seismic epicenter waypoints/coordinates in the tour.
+  - visited: A Uint8Array typed array acting as a bitmask of length n. A value of 1 at index j 
+             indicates the location has been visited; a value of 0 indicates it remains unvisited.
+  - tour: An array of integers containing the sequential waypoint indices. It represents the 
+          closed-loop flight path, beginning and terminating at base index 0.
+  - step: An integer loop counter tracking the number of edges added to the tour (runs from 1 to n - 1).
+  - cur: An integer index holding the location ID of the drone's current position (the last vertex
+         added to the tour from which the algorithm searches for neighbors).
+  - best: An integer variable initialized to -1, which stores the index of the closest unvisited location
+          found during a sweep.
+  - bestD: A floating-point number initialized to Infinity, storing the shortest distance found so far
+           from the current location to any candidate location in the current loop.
+  - j: An integer loop counter and index (runs from 0 to n - 1) representing the candidate waypoint 
+       being evaluated for proximity to the current node.
+
+
+--------------------------------------------------------------------------------
+3. 2-OPT (TSP Local Search Optimization)
+--------------------------------------------------------------------------------
+Optimizes the greedy constructive tour by iteratively checking pairs of edges,
+swapping them if it reduces the total route distance, effectively removing crossing loops.
+
+• JavaScript / Node.js Implementation (from backend/server.js):
+```javascript
+function twoOpt(tour, matrix) {
+  const n = tour.length - 1;
+  let improved = true;
+  while (improved) {
+    improved = false;
+    for (let i = 1; i < n - 1; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const a = tour[i - 1], b = tour[i], c = tour[j], d = tour[j + 1];
+        if (matrix[a][c] + matrix[b][d] < matrix[a][b] + matrix[c][d] - 1e-10) {
+          let lo = i, hi = j;
+          while (lo < hi) { 
+            [tour[lo], tour[hi]] = [tour[hi], tour[lo]]; 
+            lo++; 
+            hi--; 
+          }
+          improved = true;
+        }
+      }
+    }
+  }
+  return tour;
+}
+```
+
+• Variable Definitions:
+  - tour: The route array of location indices (mutated in-place to optimize).
+  - matrix: The symmetric N x N distance matrix containing computed geodesic path costs.
+  - n: An integer representing the count of unique waypoints in the tour, excluding the closing duplicate.
+  - improved: A boolean flag indicating whether the current sweep of edge checks yielded a path length
+              reduction, triggering another validation sweep.
+  - i: An integer loop counter representing the start pivot index for the edge swap segment 
+       (runs from 1 to n - 2).
+  - j: An integer loop counter representing the end pivot index for the edge swap segment 
+       (runs from i + 1 to n - 1).
+  - a: An integer index representing the start vertex of the first edge to be cut/swapped (a = tour[i - 1]).
+  - b: An integer index representing the end vertex of the first edge to be cut/swapped (b = tour[i]).
+  - c: An integer index representing the start vertex of the second edge to be cut/swapped (c = tour[j]).
+  - d: An integer index representing the end vertex of the second edge to be cut/swapped (d = tour[j + 1]).
+       The swap removes edges (a, b) and (c, d), replacing them with new edges (a, c) and (b, d).
+  - lo: An integer pointer initialized to index i, indicating the lower boundary for reversing the 
+        in-between sub-tour segment.
+  - hi: An integer pointer initialized to index j, indicating the upper boundary for reversing the 
+        in-between sub-tour segment.
+  - p: In the mathematical TSP cost formulation, p is a summation index (runs from 1 to N - 1) representing 
+       individual steps along the permutation array to sum up total tour distance.
+  - T: In mathematical formulations, T represents the tour permutation array, where T[i] maps to the 
+       vertex index located at sequence position i.
+
+
+--------------------------------------------------------------------------------
+4. RANDOM FOREST REGRESSION (Damage Severity Estimation)
+--------------------------------------------------------------------------------
+Used to predict a structural damage severity index (0.0 to 10.0) based on real-time
+seismic and regional parameters.
+
+• Feature Vector X contains:
+  - mag (Earthquake Magnitude)
+  - depth (Focal Depth in km)
+  - fault_dist (Distance from Tectonic Fault Lines)
+  - pop_density (Local Population Density)
+  - soil_index (Local Soil Density/Shear-wave Velocity Index)
+
+• Python / Flask Implementation Framework (representing the ML service layer):
+```python
+from flask import Flask, request, jsonify
+import joblib
+import numpy as np
+
+app = Flask(__name__)
+
+# Load pre-trained Random Forest model
+# The model consists of B=100 decision trees trained on historical geological data
+forest = joblib.load('seismic_rf_model.pkl')
+
+@app.route('/predict_severity', methods=['POST'])
+def predict_severity():
+    data = request.get_json()
+    
+    # Extract features matching the model requirements
+    mag = data.get('mag')
+    depth = data.get('depth')
+    fault_dist = data.get('fault_dist')
+    pop_density = data.get('pop_density')
+    soil_index = data.get('soil_index')
+    
+    # Assemble SeismicFeatureVector X
+    X = np.array([[mag, depth, fault_dist, pop_density, soil_index]])
+    
+    # Perform inference (computes average across all B decision trees)
+    severity_score = float(forest.predict(X)[0])
+    
+    return jsonify({
+        'severity_score': round(severity_score, 2)
+    })
+
+if __name__ == '__main__':
+    app.run(port=5001)
+```
+
+• Decision Tree Ensemble Prediction Algorithm Logic:
+```python
+def RandomForestPredict(forest, X):
+    # Number of bootstrap trees (B = 100)
+    B = len(forest.estimators_)
+    predictions = np.zeros(B)
+    
+    # Gather prediction from each individual decision tree
+    for b in range(B):
+        predictions[b] = forest.estimators_[b].predict(X)
+        
+    # Average individual decision tree outputs
+    sum_predictions = np.sum(predictions)
+    severity_score = sum_predictions / B
+    return severity_score
+```
+
+• Variable Definitions:
+  - mag: A floating-point number indicating the earthquake magnitude on the Richter/moment scale.
+  - depth: A floating-point number indicating the hypocentral/focal depth of the earthquake (in kilometers).
+  - fault_dist: A floating-point number indicating the distance of the epicenter to the nearest fault line (in km).
+  - pop_density: A floating-point number indicating the population density of the region surrounding the epicenter.
+  - soil_index: A floating-point number representing local soil density or shear-wave velocity (e.g., Vs30 values).
+  - X: A 2D numpy array representing the SeismicFeatureVector of size 1 x 5, holding features [mag, depth, fault_dist, pop_density, soil_index].
+  - forest: The trained Scikit-Learn RandomForestRegressor ensemble model object containing B decision trees.
+  - B: An integer representing the total number of bootstrap decision tree estimators in the forest (B = 100).
+  - b: An integer loop counter and index (runs from 0 to B - 1) representing the index of the active decision tree estimator.
+  - predictions: A 1D numpy array of size B, where predictions[b] stores the structural damage severity score 
+                 output by decision tree estimator b.
+  - sum_predictions: A floating-point value holding the running total sum of the individual predictions of the B trees.
+  - severity_score: A floating-point value (ranging from 0.0 to 10.0) representing the final predicted average structural damage severity score.
+================================================================================

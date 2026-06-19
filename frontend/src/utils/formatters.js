@@ -1,21 +1,22 @@
 // ─── Number formatting ────────────────────────────────────────────────────────
 
 export const fmt = (n, decimals = 2) =>
-  n == null ? '—' : Number(n).toLocaleString('en-US', {
+  n == null || n === '' || isNaN(Number(n)) ? '—' : Number(n).toLocaleString('en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });
 
 export const fmtInt = (n) =>
-  n == null ? '—' : Math.round(n).toLocaleString('en-US');
+  n == null || n === '' || isNaN(Number(n)) ? '—' : Math.round(Number(n)).toLocaleString('en-US');
 
 export const fmtMs = (ms) => {
-  if (ms == null) return '—';
-  return ms < 1000 ? `${Number(ms).toFixed(2)} ms` : `${(ms / 1000).toFixed(2)} s`;
+  if (ms == null || ms === '' || isNaN(Number(ms))) return '—';
+  const msNum = Number(ms);
+  return msNum < 1000 ? `${msNum.toFixed(2)} ms` : `${(msNum / 1000).toFixed(2)} s`;
 };
 
 export const fmtPct = (n) =>
-  n == null ? '—' : `${Number(n).toFixed(1)}%`;
+  n == null || n === '' || isNaN(Number(n)) ? '—' : `${Number(n).toFixed(1)}%`;
 
 // ─── Date / time formatting ───────────────────────────────────────────────────
 
@@ -45,11 +46,17 @@ export const fmtUtcDate = (date = new Date()) =>
  */
 export const calcMission = (distKm, capacityWh, maxRangeKm, wh_per_km, speedKmh) => {
   if (!distKm || distKm === 0) return null;
-  const energyUsed     = distKm * wh_per_km;
-  const batteryUsedPct = Math.min(100, (energyUsed / capacityWh) * 100);
+
+  const cap = parseFloat(capacityWh) || 0;
+  const range = parseFloat(maxRangeKm) || 0;
+  const consumption = parseFloat(wh_per_km) || 0;
+  const speed = parseFloat(speedKmh) || 0;
+
+  const energyUsed     = distKm * consumption;
+  const batteryUsedPct = cap > 0 ? Math.min(100, (energyUsed / cap) * 100) : 100;
   const remainingPct   = Math.max(0, 100 - batteryUsedPct);
-  const etaHours       = distKm / speedKmh;
-  const feasible       = distKm <= maxRangeKm && batteryUsedPct < 100;
+  const etaHours       = speed > 0 ? distKm / speed : 0;
+  const feasible       = distKm <= range && batteryUsedPct < 100;
 
   return {
     energyUsed:     parseFloat(energyUsed.toFixed(1)),
@@ -58,7 +65,7 @@ export const calcMission = (distKm, capacityWh, maxRangeKm, wh_per_km, speedKmh)
     etaHours:       parseFloat(etaHours.toFixed(2)),
     etaMinutes:     Math.round(etaHours * 60),
     feasible,
-    overRange:      distKm > maxRangeKm,
+    overRange:      distKm > range,
     overEnergy:     batteryUsedPct >= 100,
   };
 };

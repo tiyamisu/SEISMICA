@@ -118,7 +118,13 @@ export default memo(function ControlMatrix({
                 <input
                   type="number" min={min} max={max} step={step}
                   value={droneParams[key]}
-                  onChange={(e) => setDroneParams((p) => ({ ...p, [key]: parseFloat(e.target.value) || 0 }))}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setDroneParams((p) => ({
+                      ...p,
+                      [key]: val === '' ? '' : (isNaN(parseFloat(val)) ? 0 : parseFloat(val))
+                    }));
+                  }}
                 />
               </div>
             ))}
